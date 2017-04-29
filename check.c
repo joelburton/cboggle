@@ -2,8 +2,6 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include <fcntl.h>
-#include <sys/mman.h>
 
 /** Can we find the rest of this word, starting at i,j?
  *
@@ -112,21 +110,18 @@ void print_words(WINDOW *win, bool found) {
 /** Find all words */
 
 void check_all() {
-    int fd = open(WORDS_PATH, O_RDONLY);
-    char *baddr = mmap(NULL, 1000000, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
-    char *addr = baddr;
-    while (*addr != '\0') {
-        char * const wstart = addr;
-        while (*addr != '\n') {
-            addr++;
-        }
-        *addr++ = '\0';
-
-        if (find_word(wstart)) {
-            add_word(wstart);
-            printf("%s\n", wstart);
-        }
+    FILE *dict = fopen(WORDS_PATH, "r");
+    char *word = NULL;
+    size_t bufsize = 0;
+    ssize_t nread;
+    while ((nread = getline(&word, &bufsize, dict)) > 0) {
+        if (nread < 4 || isupper(word[0]))
+            continue;
+        word[nread - 1] = '\0'; // trim newline
+        if (find_word(word))
+            add_word(word);
     }
+    free(word);
 }
 
 /** Player guesses word
