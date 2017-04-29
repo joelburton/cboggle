@@ -1,0 +1,5 @@
+/cmake-build*
+*.o
+/.idea
+checkword
+ui
