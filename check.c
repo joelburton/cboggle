@@ -20,7 +20,7 @@ bool find_rest(const char word[], int i, int j, int_least64_t used) {
         return false;
 
     // Doesn't match start of word, can't make word here
-    if (board[i][j] != toupper(word[0]))
+    if (board[i][j] != word[0])
         return false;
 
     // Make bitmask for this tile position
@@ -118,8 +118,6 @@ void read_all() {
     size_t bufsize = 0;
     ssize_t nread;
     while ((nread = getline(&word, &bufsize, dict)) > 0) {
-        if (nread < 4 || isupper(word[0]))
-            continue;
         word[nread - 1] = '\0'; // trim newline
         allwords[nallwords++] = strdup(word);
     }
