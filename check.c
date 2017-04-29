@@ -13,7 +13,7 @@
  * until this either succeeds or fails.
  */
 
-bool find_rest(char word[], int i, int j, int_least64_t used) {
+bool find_rest(const char word[], int i, int j, int_least64_t used) {
 
     // If not a legal tile, can't make word here
     if (i < 0 || i >= HEIGHT || j < 0 || j >= WIDTH)
@@ -49,7 +49,7 @@ bool find_rest(char word[], int i, int j, int_least64_t used) {
 
 /** Can this word be found on the board? */
 
-bool find_word(char word[]) {
+bool find_word(const char word[]) {
     for (int i = 0; i < HEIGHT; i++)
         for (int j = 0; j < WIDTH; j++)
             if (find_rest(word, i, j, 0x0))
@@ -60,7 +60,7 @@ bool find_word(char word[]) {
 
 bool add_word(char word[]) {
     BoardWord *new_word = malloc(sizeof(BoardWord));
-    strcpy(new_word->word, word);
+    new_word->word = word;
     new_word->found = false;
     new_word->next = NULL;
 
@@ -109,7 +109,10 @@ void print_words(WINDOW *win, bool found) {
 
 /** Find all words */
 
-void check_all() {
+char * allwords[300000];
+int nallwords = 0;
+
+void read_all() {
     FILE *dict = fopen(WORDS_PATH, "r");
     char *word = NULL;
     size_t bufsize = 0;
@@ -118,10 +121,17 @@ void check_all() {
         if (nread < 4 || isupper(word[0]))
             continue;
         word[nread - 1] = '\0'; // trim newline
-        if (find_word(word))
-            add_word(word);
+        allwords[nallwords++] = strdup(word);
     }
     free(word);
+}
+
+void check_all() {
+    for (int i = 0; i < nallwords; i++)
+        if (find_word(allwords[i])) {
+            printf("%s\n", allwords[i]);
+            add_word(allwords[i]);
+    }
 }
 
 /** Player guesses word

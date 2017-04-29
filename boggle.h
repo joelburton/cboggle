@@ -16,7 +16,7 @@
 char board[HEIGHT][WIDTH];
 
 typedef struct BoardWord_s {
-  char word[NTILES];
+  char *word;
   bool found;
   struct BoardWord_s *next;
 } BoardWord;
@@ -31,11 +31,12 @@ WINDOW *wprompt;
 
 void make_board();
 void display_board();
-bool find_word(char word[]);
+bool find_word(const char word[]);
 void check_all();
 int guess_word(char word[]);
 void print_words(WINDOW *win, bool guessed);
 void free_words();
+void read_all();
 
 
 #endif /* end of boggle_h */
