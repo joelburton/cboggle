@@ -13,49 +13,59 @@
  * until this either succeeds or fails.
  */
 
-bool find_rest(const char word[], int i, int j, int_least64_t used) {
+typedef struct Trie {
+    bool term;
+    struct Trie *letters[26];
+} Trie;
+
+Trie *trie;
+
+
+void words_at(Trie *lt, char *word, int wl, int i, int j, int_least64_t used) {
 
     // If not a legal tile, can't make word here
     if (i < 0 || i >= HEIGHT || j < 0 || j >= WIDTH)
-        return false;
-
-    // Doesn't match start of word, can't make word here
-    if (board[i][j] != toupper(word[0]))
-        return false;
+        return;
 
     // Make bitmask for this tile position
     int_least64_t mask = 0x1 << (i * WIDTH + j);
 
     // If we've already used this tile, can't make word here
     if (used & mask)
-        return false;
+        return;
 
-    // Was that the last letter? If so, we found it
-    if (*(++word) == '\0')
-        return true;
+    lt = lt->letters[tolower(board[i][j]) - 'a'];
+    
+    if (lt == NULL)
+        // no word stem started here
+        return;
 
     // Mark tile as used
     used |= mask;
+
+    word[wl++] = board[i][j];
+
+    if (lt->term) {
+        word[wl + 1] = '\0';
+//        add_word(word);
+        printf("%s\n", word);
+    }
 
     // Check every direction H/V/D from here (will also re-check this tile, but
     // the can't-reuse-this-tile rule prevents it from actually succeeding)
     for (int di = -1; di < 2; di++)
         for (int dj = -1; dj < 2; dj++)
-            if (find_rest(word, i + di, j + dj, used))
-                return true;
-
-    return false;
+            words_at(lt, word, wl, i + di, j + dj, used);
 }
 
 /** Can this word be found on the board? */
 
-bool find_word(const char word[]) {
+void words_at_all() {
+    char *word = malloc(17);
+
     for (int i = 0; i < HEIGHT; i++)
         for (int j = 0; j < WIDTH; j++)
-            if (find_rest(word, i, j, 0x0))
-                return true;
-
-    return false;
+            words_at(trie, word, 0, i, j, 0x0);
 }
 
 bool add_word(char word[]) {
@@ -109,10 +119,30 @@ void print_words(WINDOW *win, bool found) {
 
 /** Find all words */
 
-char * allwords[300000];
-int nallwords = 0;
+
+void trie_add(char *word) {
+    Trie *lt = trie;
+
+    while (*word != '\0') {
+        int ltr = word[0] - 'a';
+
+        if (ltr < 0 || ltr > 25)
+            return;
+
+        if (lt->letters[ltr] == NULL)
+            lt->letters[ltr] = calloc(1, sizeof(Trie));
+
+        lt = lt->letters[ltr];
+        word++;
+    }
+
+    lt->term = true;
+}
+
 
 void read_all() {
+    trie = calloc(1, sizeof(Trie));
+
     FILE *dict = fopen(WORDS_PATH, "r");
     char *word = NULL;
     size_t bufsize = 0;
@@ -121,18 +151,11 @@ void read_all() {
         if (nread < 4 || isupper(word[0]))
             continue;
         word[nread - 1] = '\0'; // trim newline
-        allwords[nallwords++] = strdup(word);
+        trie_add(word);
     }
     free(word);
 }
 
-void check_all() {
-    for (int i = 0; i < nallwords; i++)
-        if (find_word(allwords[i])) {
-            printf("%s\n", allwords[i]);
-            add_word(allwords[i]);
-    }
-}
 
 /** Player guesses word
  *

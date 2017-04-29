@@ -37,6 +37,8 @@ int guess_word(char word[]);
 void print_words(WINDOW *win, bool guessed);
 void free_words();
 void read_all();
+bool add_word(char word[]);
+void words_at_all();
 
 
 #endif /* end of boggle_h */
