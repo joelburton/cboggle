@@ -46,7 +46,7 @@ void words_at(Trie *lt, char *word, int wl, int i, int j, int_least64_t used) {
     word[wl++] = board[i][j];
 
     if (lt->term) {
-        word[wl + 1] = '\0';
+        word[wl] = '\0';
 //        add_word(word);
         printf("%s\n", word);
     }
