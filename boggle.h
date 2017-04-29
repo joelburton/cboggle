@@ -11,7 +11,7 @@
 #define WIDTH 4
 #define NTILES HEIGHT * WIDTH
 #define NTILES_STR "16"
-#define WORDS_PATH "/usr/share/dict/words"
+#define WORDS_PATH "3words.txt"
 
 char board[HEIGHT][WIDTH];
 

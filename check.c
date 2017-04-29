@@ -34,7 +34,7 @@ void words_at(Trie *lt, char *word, int wl, int i, int j, int_least64_t used) {
     if (used & mask)
         return;
 
-    lt = lt->letters[tolower(board[i][j]) - 'a'];
+    lt = lt->letters[board[i][j] - 'A'];
     
     if (lt == NULL)
         // no word stem started here
@@ -124,7 +124,7 @@ void trie_add(char *word) {
     Trie *lt = trie;
 
     while (*word != '\0') {
-        int ltr = word[0] - 'a';
+        int ltr = word[0] - 'A';
 
         if (ltr < 0 || ltr > 25)
             return;
@@ -148,8 +148,6 @@ void read_all() {
     size_t bufsize = 0;
     ssize_t nread;
     while ((nread = getline(&word, &bufsize, dict)) > 0) {
-        if (nread < 4 || isupper(word[0]))
-            continue;
         word[nread - 1] = '\0'; // trim newline
         trie_add(word);
     }
