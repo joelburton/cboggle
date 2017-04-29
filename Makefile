@@ -10,6 +10,8 @@ LDLIBS=
 CFLAGS+=$(shell pkg-config --cflags ncurses)
 LDLIBS+=$(shell pkg-config --libs ncurses )
 
+all: ui
+
 check.o: check.c boggle.h
 
 board.o: board.c boggle.h

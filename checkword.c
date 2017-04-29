@@ -1,14 +1,8 @@
+#include <time.h>
+#include "boggle.h"
 
-
-
-#if 0
-  int main() {
-    make_board();
-    display_board();
-    printf("\nWord? ");
-    char word[NTILES + 1];
-    scanf("%" NTILES_STR "s", word);
-    bool found = find_word(word);
-    printf("%sfound\n", found ? "" : "not ");
+int main() {
+    clock_t start = clock();
+    check_all();
+    printf("sec = %f\n", (clock() - start) / (double) CLOCKS_PER_SEC);
   }
-#endif

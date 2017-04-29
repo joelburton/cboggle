@@ -1,13 +1,12 @@
 #include "boggle.h"
 #include <stdlib.h>
 #include <time.h>
-#include <memory.h>
 
 
-char board[HEIGHT][WIDTH] = {{'M', 'E', 'A', 'T'},
-                             {'O', 'Z', 'Z', 'Z'},
-                             {'M', 'E', 'N', 'Z'},
-                             {'Z', 'Z', 'Z', 'T'}};
+char board[HEIGHT][WIDTH] = {{'S', 'U', 'S', 'G'},
+                             {'J', 'E', 'R', 'Y'},
+                             {'R', 'I', 'O', 'I'},
+                             {'E', 'A', 'N', 'T'}};
 
 char *dice[] = {"AAEEGN", "ELRTTY", "AOOTTW", "ABBJOO", "EHRTVW", "CIMOTU",
                 "DISTTY", "EIOSST", "DELRVY", "ACHOPS", "HIMNQU", "EEINSU",
@@ -22,21 +21,6 @@ void shuffle(char *array[], size_t n) {
     }
 }
 
-void sort(char array[4], size_t n) {
-    bool is_sorted;
-    do {
-        is_sorted = true;
-        n -= 1;
-        for (unsigned int i = 0; i < n; ++i)
-            if (strcmp(&array[i], &array[i + 1]) == 1) {
-                is_sorted = false;
-                char temp = array[i];
-                array[i] = array[i + 1];
-                array[i + 1] = temp;
-            }
-    } while (!is_sorted);
-}
-
 /** Make random board. */
 
 void make_board() {
@@ -46,8 +30,6 @@ void make_board() {
     for (int i = 0; i < HEIGHT; i++)
         for (int j = 0; j < WIDTH; j++)
             board[i][j] = dice[i * 4 + j][random() % 6];
-
-    sort(board[0], 16);
 }
 
 void display_board() {
@@ -58,9 +40,3 @@ void display_board() {
     }
 }
 
-#if 0
-int main() {
-  make_board();
-  display_board();
-}
-#endif
