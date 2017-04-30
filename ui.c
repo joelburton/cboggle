@@ -9,6 +9,15 @@ WINDOW *wboard;
 WINDOW *wwords;
 WINDOW *wprompt;
 
+/** Prompt for a keypress -- used for status messages */
+
+static int prompt(const char *msg) {
+  werase(wprompt);
+  box(wprompt, 0, 0);
+  mvwprintw(wprompt, 1, 2, msg);
+  return wgetch(wprompt);
+}
+
 /** Display board in curses window. */
 
 static void display_board() {
@@ -23,28 +32,37 @@ static void display_board() {
  * @param found  Show found words? (If not, not-found words)
  */
 
-static void print_words(bool show_found, bool show_not_found) {
-  int rows = wwords_row - 2;
+#define COL_WIDTH 15
 
-  werase(wwords);
+static void print_words(bool show_found, bool show_not_found) {
+  const int rows = wwords_row - 2;
+  const int cols = wwords_col / COL_WIDTH;
+  const int nresults = g_sequence_get_length(legal);
+  int i = 0;
 
   GSequenceIter *p = g_sequence_get_begin_iter(legal);
 
-  for (int i = 0, c = 0; i < g_sequence_get_length(legal); i++) {
-    BoardWord *bw = g_sequence_get(p);
+  while (i < nresults) {
+    int c = 0;
+    werase(wwords);
+    if (i > 0)
+      prompt("Press any key to see more words ");
 
-    if ((show_found && bw->found) || (show_not_found && !bw->found)) {
-      int y = c % rows + 1;
-      int x = (c / rows) * 15 + 2;
-      mvwprintw(wwords, y, x, "%s\n", bw->word);
-      c += 1;
+    while (c < (rows * cols) && i < nresults) {
+      BoardWord *bw = g_sequence_get(p);
+
+      if ((show_found && bw->found) || (show_not_found && !bw->found)) {
+        int y = c % rows + 1;
+        int x = (c / rows) * COL_WIDTH + 2;
+        mvwprintw(wwords, y, x, "%s\n", bw->word);
+        c += 1;
+      }
+      i++;
+      p = g_sequence_iter_next(p);
     }
-
-    p = g_sequence_iter_next(p);
+    box(wwords, 0, 0);
+    wrefresh(wwords);
   }
-
-  box(wwords, 0, 0);
-  wrefresh(wwords);
 }
 
 /** Finish program.
@@ -76,15 +94,6 @@ static void player_round() {
 
     print_words(true, false);
   }
-}
-
-/** Prompt for a keypress -- used for status messages */
-
-static int prompt(const char *msg) {
-  werase(wprompt);
-  box(wprompt, 0, 0);
-  mvwprintw(wprompt, 1, 2, msg);
-  return wgetch(wprompt);
 }
 
 /** Play a single board. */
