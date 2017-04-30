@@ -9,7 +9,7 @@ static void trie_add(char *word) {
   Trie *lt = trie;
 
   while (*word != '\0') {
-    int ltr = word[0] - 'A';
+    int ltr = word[0] - 'a';
     assert (ltr >= 0 && ltr < 26);
 
     if (lt->letters[ltr] == NULL)
@@ -25,8 +25,8 @@ static void trie_add(char *word) {
 
 /** Read dictionary file.
  *
- * File must be a all uppercase, already pruned to word at least 3-chars long,
- * and without anty punctuation.
+ * File must be a all lowercase, already pruned to word at least 3-chars long,
+ * and without any punctuation.
  */
 
 void read_all() {

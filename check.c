@@ -1,15 +1,14 @@
 #include "boggle.h"
 #include <stdlib.h>
 #include <string.h>
-
+#include <ctype.h>
 
 /** Compare a BoardWord to a given word.
  *
- * Does a case-insenstive comparison of a BoardWord to a word; used to look up
- * a player-provided word to see if it is in the list.
+ * Does a comparison of a BoardWord to a word; used to decide to add a word.
  **/
 
-gint boardwords_search_word(gconstpointer a, gconstpointer b, gpointer data) {
+static gint boardwords_cmp_w(gconstpointer a, gconstpointer b, gpointer data) {
   const char *aa = ((BoardWord *) a)->word;
   const char *bb = b;
   return strcasecmp(aa, bb);
@@ -17,7 +16,7 @@ gint boardwords_search_word(gconstpointer a, gconstpointer b, gpointer data) {
 
 /** Compare boardwords by the actual word. */
 
-gint boardwords_search(gconstpointer a, gconstpointer b, gpointer data) {
+static gint boardwords_cmp(gconstpointer a, gconstpointer b, gpointer data) {
   const char *aa = ((BoardWord *) a) -> word;
   const char *bb = ((BoardWord *) b) -> word;
   return strcmp(aa, bb);
@@ -26,14 +25,14 @@ gint boardwords_search(gconstpointer a, gconstpointer b, gpointer data) {
 /** Add word to linked list of legal words. */
 
 static bool add_word(const char word[]) {
-  if (g_sequence_lookup(legal, (gpointer) word, boardwords_search_word, NULL))
+  if (g_sequence_lookup(legal, (gpointer) word, boardwords_cmp_w, NULL))
     return false;
 
   BoardWord *new_word = malloc(sizeof(BoardWord));
   new_word->word = strdup(word);
   new_word->found = false;
 
-  g_sequence_insert_sorted(legal, new_word, boardwords_search, NULL);
+  g_sequence_insert_sorted(legal, new_word, boardwords_cmp, NULL);
   return true;
 }
 
@@ -84,7 +83,7 @@ static void find_words(
 
   // Either this is a word, or the stem of a word. So update our 'word' to
   // include this letter.
-  word[word_len++] = board[y][x];
+  word[word_len++] = (char) tolower(board[y][x]);
 
   // Add this word to the found-words.
   if (lt->term) {
@@ -99,10 +98,16 @@ static void find_words(
       find_words(lt, word, word_len, y + di, x + dj, used);
 }
 
+/** Free word inside a boardword. Called by g_sequence_free. */
+
+void boardwords_free(gpointer bw) {
+  free((void *) ((BoardWord *) bw)->word);
+}
+
 /** Find all words on board. */
 
 void find_all_words() {
-  legal = g_sequence_new(false);
+  legal = g_sequence_new(boardwords_free);
   char *const word = malloc(17);
 
   for (int i = 0; i < HEIGHT; i++)
@@ -113,7 +118,7 @@ void find_all_words() {
 /** Free list of legal words. */
 
 void free_words() {
-  return; // TODO: need to add free!
+  g_sequence_free(legal);
 }
 
 /** Check player guess.
@@ -123,7 +128,7 @@ void free_words() {
 
 int guess_word(char word[]) {
   GSequenceIter *iter = g_sequence_lookup(
-      legal, (gpointer) word, boardwords_search_word, NULL);
+      legal, (gpointer) word, boardwords_cmp_w, NULL);
 
   if (iter == NULL) return 0;
 
