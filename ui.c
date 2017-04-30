@@ -18,28 +18,38 @@ static void display_board() {
       mvwaddch(wboard, y * 2 + 1, x * 4 + 2, (const chtype) board[y][x]);
 }
 
+typedef struct PrintData {
+  int i;
+  bool show_found;
+  bool show_not_found;
+} PrintData;
+
+void print_word(gpointer bw, gpointer data) {
+  PrintData *print_data = data;
+  BoardWord *w = bw;
+
+  if (!((print_data->show_found && w->found)
+      || (print_data->show_not_found && !w->found)))
+    return;
+
+  int rows = wwords_row - 2;
+  int y = print_data->i % rows + 1;
+  int x = (print_data->i / rows) * 15 + 2;
+  mvwprintw(wwords, y, x, "%s\n", ((BoardWord *) bw)->word);
+  print_data->i++;
+}
+
+
 /** Print words to curses window.
  *
  * @param found  Show found words? (If not, not-found words)
  */
 
 static void print_words(bool show_found, bool show_not_found) {
-  BoardWord *p = legal;
-  int i = 0;
-  int rows = wwords_row - 2;
   werase(wwords);
+  PrintData pd = {.show_found=show_found, .show_not_found=show_not_found, .i=0};
 
-  while (p != NULL) {
-    if ((show_found && p->found) || (show_not_found && !p->found)) {
-      int y = i % rows + 1;
-      int x = (i / rows) * 15 + 2;
-      mvwprintw(wwords, y, x, "%s\n", p->word);
-      i++;
-    }
-
-    p = p->next;
-  }
-
+  g_sequence_foreach(legal, print_word, &pd);
   box(wwords, 0, 0);
   wrefresh(wwords);
 }

@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <ncurses.h>
+#include <glib-2.0/glib.h>
 
 #ifndef BOGGLE_H
 #define BOGGLE_H
@@ -23,10 +24,9 @@ Trie *trie;
 typedef struct BoardWord_s {
   const char *word;
   bool found;
-  struct BoardWord_s *next;
 } BoardWord;
 
-BoardWord *legal;
+GSequence *legal;
 
 
 // board.c

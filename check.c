@@ -3,31 +3,37 @@
 #include <string.h>
 
 
+/** Compare a BoardWord to a given word.
+ *
+ * Does a case-insenstive comparison of a BoardWord to a word; used to look up
+ * a player-provided word to see if it is in the list.
+ **/
+
+gint boardwords_search_word(gconstpointer a, gconstpointer b, gpointer data) {
+  const char *aa = ((BoardWord *) a)->word;
+  const char *bb = b;
+  return strcasecmp(aa, bb);
+}
+
+/** Compare boardwords by the actual word. */
+
+gint boardwords_search(gconstpointer a, gconstpointer b, gpointer data) {
+  const char *aa = ((BoardWord *) a) -> word;
+  const char *bb = ((BoardWord *) b) -> word;
+  return strcmp(aa, bb);
+}
+
 /** Add word to linked list of legal words. */
 
 static bool add_word(const char word[]) {
+  if (g_sequence_lookup(legal, (gpointer) word, boardwords_search_word, NULL))
+    return false;
+
   BoardWord *new_word = malloc(sizeof(BoardWord));
   new_word->word = strdup(word);
   new_word->found = false;
-  new_word->next = NULL;
 
-  if (legal == NULL) {
-    // First legal word!
-    legal = new_word;
-    return true;
-  }
-
-  BoardWord *p = legal;
-  while (p->next != NULL) {
-    if (strcmp(p->word, word) == 0) {
-      free((void *) new_word->word);
-      free(new_word); // didn't need it after all
-      return false;
-    }
-    p = p->next;
-  }
-
-  p->next = new_word;
+  g_sequence_insert_sorted(legal, new_word, boardwords_search, NULL);
   return true;
 }
 
@@ -96,6 +102,7 @@ static void find_words(
 /** Find all words on board. */
 
 void find_all_words() {
+  legal = g_sequence_new(false);
   char *const word = malloc(17);
 
   for (int i = 0; i < HEIGHT; i++)
@@ -106,11 +113,7 @@ void find_all_words() {
 /** Free list of legal words. */
 
 void free_words() {
-  while (legal != NULL) {
-    BoardWord *next = legal->next;
-    free(legal);
-    legal = next;
-  }
+  return; // TODO: need to add free!
 }
 
 /** Check player guess.
@@ -119,16 +122,15 @@ void free_words() {
  */
 
 int guess_word(char word[]) {
-  BoardWord *p = legal;
+  GSequenceIter *iter = g_sequence_lookup(
+      legal, (gpointer) word, boardwords_search_word, NULL);
 
-  while (p != NULL)
-    if (strcasecmp(p->word, word) == 0)
-      if (p->found)
-        return -1;
-      else
-        return (p->found = 1);
-    else
-      p = p->next;
+  if (iter == NULL) return 0;
 
-  return 0;
+  BoardWord *w = g_sequence_get(iter);
+
+  if (w->found) return -1;
+
+  w->found = true;
+  return 1;
 }

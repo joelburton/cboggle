@@ -7,8 +7,8 @@ LDLIBS=
 # CFLAGS=-Wall -Wextra -O2
 # LDLIBS=
 
-CFLAGS+=$(shell pkg-config --cflags ncurses)
-LDLIBS+=$(shell pkg-config --libs ncurses )
+CFLAGS+=$(shell pkg-config --cflags ncurses glib-2.0)
+LDLIBS+=$(shell pkg-config --libs ncurses glib-2.0)
 
 all: ui
 
