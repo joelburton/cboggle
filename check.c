@@ -2,196 +2,133 @@
 #include <stdlib.h>
 #include <string.h>
 
-/** Can we find the rest of this word, starting at i,j?
+
+/** Add word to linked list of legal words. */
+
+static bool add_word(const char word[]) {
+  BoardWord *new_word = malloc(sizeof(BoardWord));
+  new_word->word = strdup(word);
+  new_word->found = false;
+  new_word->next = NULL;
+
+  if (legal == NULL) {
+    // First legal word!
+    legal = new_word;
+    return true;
+  }
+
+  BoardWord *p = legal;
+  while (p->next != NULL) {
+    if (strcmp(p->word, word) == 0) {
+      free((void *) new_word->word);
+      free(new_word); // didn't need it after all
+      return false;
+    }
+    p = p->next;
+  }
+
+  p->next = new_word;
+  return true;
+}
+
+/** Find all words starting from this tile and trie.
  *
- * Look for the word, starting at tile [i,j]. Check to ensure
- * that this is a valid board square, that it matches the first
- * letter of the word sought, and that we have used this tile
- * before (track this by using `used` as a bitfield).
- * If this word is still possible, recurse and check in all directions
- * until this either succeeds or fails.
+ * This is a recursive function -- it is given a tile (via y and x)
+ * and a trie pointer of where it is in a current word (along with the word
+ * and word_len for that word). For example, it might be given the tile at
+ * (1,1) and a trie-pointer to the end letter of C->A->T. For this example,
+ * word="CAT" and word_len=3. It would the note that "CAT" is a good word,
+ * and the recurse to all the neighboring tiles.
+ *
+ * Since you can only use a given tile once per word, it keeps a bitmask of
+ * used tile positions. If the tile at the given position is already used,
+ * this returns without continuing searching.
+ *
+ * @param lt         Pointer to current local trie
+ * @param word       Word that we're currently making
+ * @param word_len   length of word we're currently making
+ * @param y          y pos of tile
+ * @param x          x pos of tile
+ * @param used       bitmask of tile positions used
  */
 
-typedef struct Trie {
-    bool term;
-    struct Trie *letters[26];
-} Trie;
+static void find_words(
+    Trie *lt, char *word, int word_len, int y, int x, int_least64_t used) {
 
-Trie *trie;
+  // If not a legal tile, can't make word here
+  if (y < 0 || y >= HEIGHT || x < 0 || x >= WIDTH)
+    return;
 
+  // Make bitmask for this tile position
+  int_least64_t mask = 0x1 << (y * WIDTH + x);
 
-void words_at(Trie *lt, char *word, int wl, int i, int j, int_least64_t used) {
+  // If we've already used this tile, can't make word here
+  if (used & mask)
+    return;
 
-    // If not a legal tile, can't make word here
-    if (i < 0 || i >= HEIGHT || j < 0 || j >= WIDTH)
-        return;
+  // Find the trie for existing-trie plus this letter.
+  lt = lt->letters[board[y][x] - 'A'];
 
-    // Make bitmask for this tile position
-    int_least64_t mask = 0x1 << (i * WIDTH + j);
+  if (lt == NULL)
+    // There are no words continuing with this letter
+    return;
 
-    // If we've already used this tile, can't make word here
-    if (used & mask)
-        return;
+  // Mark tile as used
+  used |= mask;
 
-    lt = lt->letters[board[i][j] - 'A'];
-    
-    if (lt == NULL)
-        // no word stem started here
-        return;
+  // Either this is a word, or the stem of a word. So update our 'word' to
+  // include this letter.
+  word[word_len++] = board[y][x];
 
-    // Mark tile as used
-    used |= mask;
+  // Add this word to the found-words.
+  if (lt->term) {
+    word[word_len] = '\0';
+    add_word(word);
+  }
 
-    word[wl++] = board[i][j];
-
-    if (lt->term) {
-        word[wl] = '\0';
-//        add_word(word);
-        printf("%s\n", word);
-    }
-
-    // Check every direction H/V/D from here (will also re-check this tile, but
-    // the can't-reuse-this-tile rule prevents it from actually succeeding)
-    for (int di = -1; di < 2; di++)
-        for (int dj = -1; dj < 2; dj++)
-            words_at(lt, word, wl, i + di, j + dj, used);
+  // Check every direction H/V/D from here (will also re-check this tile, but
+  // the can't-reuse-this-tile rule prevents it from actually succeeding)
+  for (int di = -1; di < 2; di++)
+    for (int dj = -1; dj < 2; dj++)
+      find_words(lt, word, word_len, y + di, x + dj, used);
 }
 
-/** Can this word be found on the board? */
+/** Find all words on board. */
 
-void words_at_all() {
-    char *word = malloc(17);
+void find_all_words() {
+  char *const word = malloc(17);
 
-    for (int i = 0; i < HEIGHT; i++)
-        for (int j = 0; j < WIDTH; j++)
-            words_at(trie, word, 0, i, j, 0x0);
+  for (int i = 0; i < HEIGHT; i++)
+    for (int j = 0; j < WIDTH; j++)
+      find_words(trie, word, 0, i, j, 0x0);
 }
 
-bool add_word(char word[]) {
-    BoardWord *new_word = malloc(sizeof(BoardWord));
-    new_word->word = word;
-    new_word->found = false;
-    new_word->next = NULL;
-
-    if (legal == NULL) {
-        // First legal word!
-        legal = new_word;
-        return true;
-    }
-
-    BoardWord *p = legal;
-    while (p->next != NULL) {
-        if (strcmp(p->word, word) == 0) {
-            free(new_word); /// didn't need it after all
-            return false;
-        }
-        p = p->next;
-    }
-
-    p->next = new_word;
-    return true;
-}
+/** Free list of legal words. */
 
 void free_words() {
-    while (legal != NULL) {
-        BoardWord *next = legal->next;
-        free(legal);
-        legal = next;
-    }
+  while (legal != NULL) {
+    BoardWord *next = legal->next;
+    free(legal);
+    legal = next;
+  }
 }
 
-void print_words(WINDOW *win, bool found) {
-    BoardWord *p = legal;
-    int i = 0;
-    int rows = wwords_row - 2;
-    while (p != NULL) {
-        if (p->found == found) {
-            // mvwprintw(win, i / 5 + 1, (i % 5) * 15 + 2, "%s\n", p->word);
-            mvwprintw(win, i % rows + 1, (i / rows) * 15 + 2, "%s\n", p->word);
-            i++;
-        }
-        p = p->next;
-    }
-    box(win, 0, 0);
-    wrefresh(win);
-}
-
-/** Find all words */
-
-
-void trie_add(char *word) {
-    Trie *lt = trie;
-
-    while (*word != '\0') {
-        int ltr = word[0] - 'A';
-
-        if (ltr < 0 || ltr > 25)
-            return;
-
-        if (lt->letters[ltr] == NULL)
-            lt->letters[ltr] = calloc(1, sizeof(Trie));
-
-        lt = lt->letters[ltr];
-        word++;
-    }
-
-    lt->term = true;
-}
-
-
-void read_all() {
-    trie = calloc(1, sizeof(Trie));
-
-    FILE *dict = fopen(WORDS_PATH, "r");
-    char *word = NULL;
-    size_t bufsize = 0;
-    ssize_t nread;
-    while ((nread = getline(&word, &bufsize, dict)) > 0) {
-        word[nread - 1] = '\0'; // trim newline
-        trie_add(word);
-    }
-    free(word);
-}
-
-
-/** Player guesses word
+/** Check player guess.
  *
- * 0 = not a word
- * -1 already guessed
- * 1 = ok
+ * @return 0 (not a word), -1 (already guessed), or 1 (good)
  */
 
 int guess_word(char word[]) {
-    BoardWord *p = legal;
-    while (p != NULL) {
-        if (strcmp(p->word, word) == 0) {
-            if (p->found)
-                return -1;
-            p->found = 1;
-            return 1;
-        }
-        p = p->next;
-    }
-    return 0;
-}
+  BoardWord *p = legal;
 
-#if 0
-int main() {
-  make_board();
-  display_board();
-  check_all();
-  char *word = NULL;
-  size_t bufsize = 0;
-  int nread;
-  printf("\nWord? (control-D quits) ");
-  while ((nread = getline(&word, &bufsize, stdin)) > 0) {
-    word[nread - 1] = '\0';
-    printf("     %s: %d\n", word, guess_word(word));
-    printf("\nAnother? ");
-  }
-  printf("\n\nFound:\n");
-  print_words(true);
-  printf("\nMissed:\n");
-  print_words(false);
+  while (p != NULL)
+    if (strcasecmp(p->word, word) == 0)
+      if (p->found)
+        return -1;
+      else
+        return (p->found = 1);
+    else
+      p = p->next;
+
+  return 0;
 }
-#endif

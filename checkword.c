@@ -9,6 +9,8 @@ int main() {
     printf("read sec = %f\n", (clock() - start) / (double) CLOCKS_PER_SEC);
 
     start = clock();
-    words_at_all();
+    find_all_words();
     printf("check sec = %f\n", (clock() - start) / (double) CLOCKS_PER_SEC);
+
+
   }

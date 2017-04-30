@@ -16,11 +16,11 @@ check.o: check.c boggle.h
 
 board.o: board.c boggle.h
 
+dict.o: dict.c boggle.h
+
 checkword: check.o board.o checkword.o
 
-check: check.o board.o
-
-ui: ui.o check.o board.o
+ui: ui.o check.o board.o dict.o
 
 clean:
-	rm -f *.o board boggle check
+	rm -f *.o ui checkword

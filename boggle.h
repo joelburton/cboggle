@@ -9,36 +9,40 @@
 // should work.
 #define HEIGHT 4
 #define WIDTH 4
-#define NTILES HEIGHT * WIDTH
-#define NTILES_STR "16"
 #define WORDS_PATH "3words.txt"
 
-char board[HEIGHT][WIDTH];
+
+typedef struct Trie {
+  bool term;
+  struct Trie *letters[26];
+} Trie;
+
+Trie *trie;
+
 
 typedef struct BoardWord_s {
-  char *word;
+  const char *word;
   bool found;
   struct BoardWord_s *next;
 } BoardWord;
 
 BoardWord *legal;
 
-int winrow, wincol;
-int wwords_row, wwords_col;
-WINDOW *wboard;
-WINDOW *wwords;
-WINDOW *wprompt;
 
+// board.c
+
+char board[HEIGHT][WIDTH];
 void make_board();
-void display_board();
-bool find_word(const char word[]);
-void check_all();
-int guess_word(char word[]);
-void print_words(WINDOW *win, bool guessed);
+
+// check.c
+
+void find_all_words();
 void free_words();
+int guess_word(char word[]);
+
+// dict.c
+
 void read_all();
-bool add_word(char word[]);
-void words_at_all();
 
 
 #endif /* end of boggle_h */
