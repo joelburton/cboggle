@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.7)
 project(boggle)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_C_STANDARD 11)
 include(FindPkgConfig)
 pkg_check_modules(CURSES ncurses REQUIRED)
 pkg_check_modules(GLIB glib-2.0 REQUIRED)

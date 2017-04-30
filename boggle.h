@@ -1,6 +1,6 @@
 #include <stdbool.h>
 #include <ncurses.h>
-#include <glib-2.0/glib.h>
+#include <glib.h>
 
 #ifndef BOGGLE_H
 #define BOGGLE_H
@@ -43,6 +43,10 @@ int guess_word(char word[]);
 // dict.c
 
 void read_all();
+
+// ui.c
+
+int round_length;
 
 
 #endif /* end of boggle_h */

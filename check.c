@@ -8,7 +8,9 @@
  * Does a comparison of a BoardWord to a word; used to decide to add a word.
  **/
 
-static gint boardwords_cmp_w(gconstpointer a, gconstpointer b, gpointer data) {
+static gint boardwords_cmp_w(gconstpointer a,
+                             gconstpointer b,
+                             gpointer data __attribute__ ((unused))) {
   const char *aa = ((BoardWord *) a)->word;
   const char *bb = b;
   return strcasecmp(aa, bb);
@@ -16,7 +18,9 @@ static gint boardwords_cmp_w(gconstpointer a, gconstpointer b, gpointer data) {
 
 /** Compare boardwords by the actual word. */
 
-static gint boardwords_cmp(gconstpointer a, gconstpointer b, gpointer data) {
+static gint boardwords_cmp(gconstpointer a,
+                           gconstpointer b,
+                           gpointer data __attribute__ ((unused))) {
   const char *aa = ((BoardWord *) a) -> word;
   const char *bb = ((BoardWord *) b) -> word;
   return strcmp(aa, bb);

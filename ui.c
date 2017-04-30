@@ -1,5 +1,4 @@
 #include "boggle.h"
-#include <signal.h>
 #include <stdlib.h>
 #include <ctype.h>
 
@@ -8,6 +7,7 @@ int wwords_row, wwords_col;
 WINDOW *wboard;
 WINDOW *wwords;
 WINDOW *wprompt;
+WINDOW *wtimer;
 
 /** Prompt for a keypress -- used for status messages */
 
@@ -79,21 +79,73 @@ _Noreturn void finish(int sig __attribute__ ((unused))) {
   exit(EXIT_SUCCESS);
 }
 
-/** Play a round of player guessing. */
+/** Get a word, while updating timer. */
+
+static bool get_word(char *word, time_t start_round) {
+  int wl = 0;
+  char *blank = "                 ";
+  mvwaddstr(wprompt, 1, 4, blank);
+  halfdelay(1);
+
+  while (true) {
+    int ch = mvwgetch(wprompt, 1, 4 + wl);
+
+    int left = (int) (round_length - (time(NULL) - start_round));
+    mvwprintw(wtimer, 0, 0, "Secs: %3d", left);
+    wrefresh(wtimer);
+
+    if (left <= 0 || ch == '*')
+      return true;
+
+    if (ch == ERR)
+      // ran out of time so timer updated; keep going
+      continue;
+
+    if (ch == '\n') {
+      // finished word, mark as done and return
+      word[wl] = '\0';
+      return false;
+    }
+
+    if (ch == KEY_BACKSPACE || ch == KEY_LEFT || ch == 127) {
+      if (wl > 0)
+        mvwaddch(wprompt, 1, 4 + (--wl), ' ');
+    }
+
+    if (wl >= 16)
+      // word is max length
+      continue;
+
+    if (ch >= 'A' && ch <= 'Z')
+      ch = tolower(ch);
+
+    if (ch >= 'a' && ch <= 'z')
+      word[wl++] = (char) ch;
+
+    mvwaddnstr(wprompt, 1, 4, word, wl);
+  }
+}
+
+/** Play a round of user input. */
 
 static void player_round() {
-  char word[20];
-  while (true) {
-    werase(wprompt);
-    box(wprompt, 0, 0);
-    mvwprintw(wprompt, 1, 2, "> ");
-    wgetstr(wprompt, word);
-    if (word[0] == '*')
-      break;
-    (void) guess_word(word);
+  werase(wprompt);
+  box(wprompt, 0, 0);
+  mvwprintw(wprompt, 1, 2, "> ");
+  char word[17];
+  time_t start_round = time(NULL);
+  halfdelay(1);
 
+  while (true) {
+    if (get_word(word, start_round))
+      // ran out of time, so round is over
+      break;
+
+    (void) guess_word(word);
     print_words(true, false);
   }
+
+  cbreak();
 }
 
 /** Play a single board. */
@@ -107,8 +159,9 @@ static void play_board() {
   box(wboard, 0, 0);
   wrefresh(wboard);
 
-  mvprintw(3, 19, "Enter '*' to quit round.");
+  mvprintw(3, 19, "Type * to stop");
   mvprintw(10, 1, "Correctly Guessed Words:");
+  refresh();
   print_words(false, false);
   prompt("Press any key to start. ");
 
@@ -128,17 +181,27 @@ static void play_board() {
 
 /** Main program. */
 
-int main() {
+int main(int argc, char *argv[]) {
+
+  if (argc > 1)
+    round_length = atoi(argv[1]);
+  else
+    round_length = 300;
+
   initscr();
   signal(SIGINT, finish);
   cbreak();
+  noecho();
+
   getmaxyx(stdscr, winrow, wincol);
 
   mvprintw(1, 19, "LOVELY LEVERET LEXIGAME v1.0");
   refresh();
 
+  wtimer = newwin(1, 10, 3, 38);
   wboard = newwin(9, 17, 0, 0);
-  wprompt = newwin(3, wincol - 19, 6, 19);
+  wprompt = newwin(3, wincol - 20, 6, 19);
+  keypad(wprompt, TRUE);
 
   wwords_row = winrow - 11;
   wwords_col = wincol;
