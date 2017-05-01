@@ -4,10 +4,15 @@
 
 // board, with a sensible default set of letters for testing.
 
-char board[HEIGHT][WIDTH] = {{'S', 'U', 'S', 'G'},
-                             {'J', 'E', 'R', 'Y'},
-                             {'R', 'I', 'O', 'I'},
-                             {'E', 'A', 'N', 'T'}};
+//char board[HEIGHT][WIDTH] = {{'S', 'U', 'S', 'G'},
+//                             {'J', 'E', 'R', 'Y'},
+//                             {'R', 'I', 'O', 'I'},
+//                             {'E', 'A', 'N', 'T'}};
+
+char board[HEIGHT][WIDTH] = {{'P', 'E', 'R', 'S'},
+                             {'L', 'A', 'T', 'G'},
+                             {'S', 'I', 'N', 'E'},
+                             {'T', 'E', 'R', 'S'}};
 
 /** Shuffle order of dice */
 
