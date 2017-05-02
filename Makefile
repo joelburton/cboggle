@@ -4,8 +4,8 @@ LDLIBS=
 # CFLAGS+=-fsanitize=address -fsanitize=undefined
 # LDLIBS+=-fsanitize=address -fsanitize=undefined
 #
-# CFLAGS=-Wall -Wextra -O2
-# LDLIBS=
+CFLAGS=-Wall -Wextra -O2
+LDLIBS=
 
 CFLAGS+=$(shell pkg-config --cflags ncurses glib-2.0)
 LDLIBS+=$(shell pkg-config --libs ncurses glib-2.0)

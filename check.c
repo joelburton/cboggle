@@ -3,6 +3,18 @@
 #include <string.h>
 #include <ctype.h>
 
+/** DAWG handling. */
+
+#define CHILD_BIT_SHIFT 10
+#define EOW_BIT_MASK 0X00000200
+#define EOL_BIT_MASK 0X00000100
+#define LTR_BIT_MASK 0X000000FF
+
+#define DAWG_LETTER(arr, i) (arr[i] & LTR_BIT_MASK)
+#define DAWG_EOW(arr, i)    (arr[i] & EOW_BIT_MASK)
+#define DAWG_NEXT(arr, i)  ((arr[i] & EOL_BIT_MASK) ? 0 : i + 1)
+#define DAWG_CHILD(arr, i)  (arr[i] >> CHILD_BIT_SHIFT)
+
 /** Compare a BoardWord to a given word.
  *
  * Does a comparison of a BoardWord to a word; used to decide to add a word.
@@ -62,7 +74,7 @@ static bool add_word(const char word[]) {
  */
 
 static void find_words(
-    Trie *lt, char *word, int word_len, int y, int x, int_least64_t used) {
+    unsigned int i, char *word, int word_len, int y, int x, int_least64_t used) {
 
   // If not a legal tile, can't make word here
   if (y < 0 || y >= HEIGHT || x < 0 || x >= WIDTH)
@@ -76,9 +88,12 @@ static void find_words(
     return;
 
   // Find the trie for existing-trie plus this letter.
-  lt = lt->letters[board[y][x] - 'A'];
+  char sought = toupper(board[y][x]);
 
-  if (lt == NULL)
+  while (i != 0 && DAWG_LETTER(dawg, i) != sought)
+    i = DAWG_NEXT(dawg, i);
+
+  if (i == 0)
     // There are no words continuing with this letter
     return;
 
@@ -87,10 +102,10 @@ static void find_words(
 
   // Either this is a word, or the stem of a word. So update our 'word' to
   // include this letter.
-  word[word_len++] = (char) tolower(board[y][x]);
+  word[word_len++] = tolower(board[y][x]);
 
   // Add this word to the found-words.
-  if (lt->term) {
+  if (DAWG_EOW(dawg, i)) {
     word[word_len] = '\0';
     add_word(word);
   }
@@ -99,7 +114,7 @@ static void find_words(
   // the can't-reuse-this-tile rule prevents it from actually succeeding)
   for (int di = -1; di < 2; di++)
     for (int dj = -1; dj < 2; dj++)
-      find_words(lt, word, word_len, y + di, x + dj, used);
+      find_words(DAWG_CHILD(dawg, i), word, word_len, y + di, x + dj, used);
 }
 
 /** Free word inside a boardword. Called by g_sequence_free. */
@@ -116,7 +131,7 @@ void find_all_words() {
 
   for (int i = 0; i < HEIGHT; i++)
     for (int j = 0; j < WIDTH; j++)
-      find_words(trie, word, 0, i, j, 0x0);
+      find_words(1, word, 0, i, j, 0x0);
 }
 
 /** Free list of legal words. */

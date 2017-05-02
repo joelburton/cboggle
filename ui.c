@@ -152,8 +152,10 @@ static void player_round() {
 
 static void play_board() {
   make_board();
-  read_all();
+
+  clock_t start = clock();
   find_all_words();
+  printf("\nfound: %f\n", (clock() - start) / (double) CLOCKS_PER_SEC);
 
   werase(wboard);
   box(wboard, 0, 0);
@@ -188,6 +190,10 @@ int main(int argc, char *argv[]) {
   else
     round_length = 300;
 
+  clock_t start = clock();
+  read_all();
+  printf("read file: %f\n", (clock() - start) / (double) CLOCKS_PER_SEC);
+
   initscr();
   signal(SIGINT, finish);
   cbreak();
@@ -213,4 +219,9 @@ int main(int argc, char *argv[]) {
   while (toupper(prompt("Play again? ")) == 'Y');
 
   finish(0);
+}
+
+_Noreturn void fatal(const char *func) {
+  perror(func);
+  exit(EXIT_FAILURE);
 }

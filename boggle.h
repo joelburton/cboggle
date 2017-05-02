@@ -13,14 +13,6 @@
 #define WORDS_PATH "3words.txt"
 
 
-typedef struct Trie {
-  bool term;
-  struct Trie *letters[26];
-} Trie;
-
-Trie *trie;
-
-
 typedef struct BoardWord_s {
   const char *word;
   bool found;
@@ -43,10 +35,13 @@ int guess_word(char word[]);
 // dict.c
 
 void read_all();
+const int32_t * dawg;
 
 // ui.c
 
 int round_length;
+_Noreturn void fatal(const char *func);
+
 
 
 #endif /* end of boggle_h */

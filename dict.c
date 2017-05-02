@@ -1,52 +1,28 @@
 #include <stdlib.h>
 #include <assert.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include "boggle.h"
 
 
-/** Add word to trie of words in dict. */
-
-static void trie_add(char *word) {
-  Trie *lt = trie;
-
-  while (*word != '\0') {
-    int ltr = word[0] - 'a';
-    assert (ltr >= 0 && ltr < 26);
-
-    if (lt->letters[ltr] == NULL)
-      lt->letters[ltr] = calloc(1, sizeof(Trie));
-
-    lt = lt->letters[ltr];
-    word++;
-  }
-
-  // We're at the end of the word, so mark this trie node as winning
-  lt->term = true;
-}
-
 /** Read dictionary file.
  *
- * File must be a all lowercase, already pruned to word at least 3-chars long,
- * and without any punctuation.
+ * Reads DAWG into memory.
  */
 
 void read_all() {
-  // Since we use a trie to hold the words, create it.
-  trie = calloc(1, sizeof(Trie));
+  const int fd = open("words.dat", O_RDONLY);
+  if (fd < 0)
+    fatal("Cannot open " "words.dat");
 
-  FILE *dict = fopen(WORDS_PATH, "r");
-  if (dict == NULL) {
-    perror(__func__);
-    exit(EXIT_FAILURE);
-  }
+  int32_t nelems;
+  if (read(fd, &nelems, 4) < 4)
+    fatal("Cannot get file size");
 
-  char *word = NULL;
-  size_t bufsize = 0;
-  ssize_t nread;
+  int32_t *f = mmap(NULL, (size_t) nelems * 4, PROT_READ, MAP_PRIVATE, fd, 0);
+  if (f == MAP_FAILED)
+    fatal("Cannot read dictionary");
 
-  while ((nread = getline(&word, &bufsize, dict)) > 0) {
-    word[nread - 1] = '\0'; // trim newline
-    trie_add(word);
-  }
-
-  free(word);
+  dawg = f + 1;
 }
