@@ -19,9 +19,9 @@ static int prompt_yn(const char *msg) {
   mvwprintw(wprompt, 1, 2, msg);
   echo();
   while (true) {
-    char *answer = alloca(4);
-    mvwgetnstr(wprompt, 1, 2 + strlen(msg), answer, 3);
-    answer = strip_whitespace(answer);
+    char buffer[4], answer[4];
+    mvwgetnstr(wprompt, 1, 2 + strlen(msg), buffer, 3);
+    sscanf(buffer, "%s", answer);
 
     if (strcasecmp(answer, "y") == 0 || strncasecmp(answer, "yes", 3) == 0) {
       noecho();
