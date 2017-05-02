@@ -13,8 +13,3 @@ char *strip_whitespace(char *str) {
 
   return str;
 }
-
-_Noreturn void fatal(const char *func) {
-  perror(func);
-  exit(EXIT_FAILURE);
-}

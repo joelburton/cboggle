@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <ncurses.h>
 #include <glib.h>
+#include <err.h>
 
 #ifndef BOGGLE_H
 #define BOGGLE_H
@@ -12,9 +13,8 @@
 // should work.
 #define HEIGHT 4
 #define WIDTH 4
-#define NTILES HEIGHT * WIDTH
-#define NTILES_STR "16"
 #define WORDS_PATH "words.dat"
+#define FATAL(m) err(1, "%s -- %s:%i %s()", m, __FILE__, __LINE__, __func__)
 
 typedef struct BoardWord_s {
   const char *word;
