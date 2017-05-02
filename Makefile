@@ -1,26 +1,20 @@
-CFLAGS=-Wall -Wextra -O0 -g3
-LDLIBS=
+CFLAGS=-Wall -Wextra -O0 -g3 -fsanitize=address -fsanitize=undefined
+LDLIBS=-fsanitize=address -fsanitize=undefined
 
-# CFLAGS+=-fsanitize=address -fsanitize=undefined
-# LDLIBS+=-fsanitize=address -fsanitize=undefined
-#
-CFLAGS=-Wall -Wextra -O2
-LDLIBS=
+# CFLAGS=-Wall -Wextra -O2
+# LDLIBS=
 
 CFLAGS+=$(shell pkg-config --cflags ncurses glib-2.0)
 LDLIBS+=$(shell pkg-config --libs ncurses glib-2.0)
 
-all: ui
+all: boggle
 
-check.o: check.c boggle.h
-
-board.o: board.c boggle.h
-
-dict.o: dict.c boggle.h
+%.o: %.c boggle.h Makefile
+	$(CC) $(CFLAGS) -c $< -o $@
 
 checkword: check.o board.o checkword.o
 
-ui: ui.o check.o board.o dict.o
+boggle: ui.o check.o board.o dict.o
 
 clean:
-	rm -f *.o ui checkword
+	rm -f *.o boggle checkword

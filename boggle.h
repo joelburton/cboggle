@@ -12,14 +12,16 @@
 #define WIDTH 4
 #define WORDS_PATH "3words.txt"
 
-
 typedef struct BoardWord_s {
   const char *word;
   bool found;
 } BoardWord;
 
 GSequence *legal;
-
+int board_nwords;
+int board_score;
+int player_nwords;
+int player_score;
 
 // board.c
 

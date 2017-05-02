@@ -29,7 +29,8 @@ static void display_board() {
 
 /** Print words to curses window.
  *
- * @param found  Show found words? (If not, not-found words)
+ * @param show_found
+ * @param show_not_found
  */
 
 #define COL_WIDTH 15
@@ -94,7 +95,7 @@ static bool get_word(char *word, time_t start_round) {
     mvwprintw(wtimer, 0, 0, "Secs: %3d", left);
     wrefresh(wtimer);
 
-    if (left <= 0 || ch == '*')
+    if (left <= 0 || ch == 4)   // ran out of time or CTRL-D
       return true;
 
     if (ch == ERR)
@@ -129,6 +130,9 @@ static bool get_word(char *word, time_t start_round) {
 /** Play a round of user input. */
 
 static void player_round() {
+  player_nwords = 0;
+  player_score = 0;
+
   werase(wprompt);
   box(wprompt, 0, 0);
   mvwprintw(wprompt, 1, 2, "> ");
@@ -142,6 +146,9 @@ static void player_round() {
       break;
 
     (void) guess_word(word);
+    mvprintw(10, 1, "Correctly Guessed Words: %d, Score: %d",
+      player_nwords, player_score);
+    refresh();
     print_words(true, false);
   }
 
@@ -152,23 +159,25 @@ static void player_round() {
 
 static void play_board() {
   make_board();
+  board_nwords = 0;
+  board_score = 0;
 
-  clock_t start = clock();
   find_all_words();
-  printf("\nfound: %f\n", (clock() - start) / (double) CLOCKS_PER_SEC);
 
   werase(wboard);
   box(wboard, 0, 0);
   wrefresh(wboard);
 
-  mvprintw(3, 19, "Type * to stop");
-  mvprintw(10, 1, "Correctly Guessed Words:");
   refresh();
   print_words(false, false);
   prompt("Press any key to start. ");
 
   display_board();
   wrefresh(wboard);
+  mvprintw(3, 19, "Board words: %d, score: %d",
+    board_nwords, board_score);
+  clrtoeol();
+  refresh();
 
   player_round();
 
@@ -190,9 +199,7 @@ int main(int argc, char *argv[]) {
   else
     round_length = 300;
 
-  clock_t start = clock();
   read_all();
-  printf("read file: %f\n", (clock() - start) / (double) CLOCKS_PER_SEC);
 
   initscr();
   signal(SIGINT, finish);
@@ -204,9 +211,9 @@ int main(int argc, char *argv[]) {
   mvprintw(1, 19, "LOVELY LEVERET LEXIGAME v1.0");
   refresh();
 
-  wtimer = newwin(1, 10, 3, 38);
+  wtimer = newwin(1, 10, 3, 52);
   wboard = newwin(9, 17, 0, 0);
-  wprompt = newwin(3, wincol - 20, 6, 19);
+  wprompt = newwin(3, wincol - 19, 6, 19);
   keypad(wprompt, TRUE);
 
   wwords_row = winrow - 11;

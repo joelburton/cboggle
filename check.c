@@ -15,6 +15,11 @@
 #define DAWG_NEXT(arr, i)  ((arr[i] & EOL_BIT_MASK) ? 0 : i + 1)
 #define DAWG_CHILD(arr, i)  (arr[i] >> CHILD_BIT_SHIFT)
 
+/** Scoring */
+
+static const int WORD_SCORES[] = {
+  0, 0, 0, 1, 1, 2, 3, 5, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11};
+
 /** Compare a BoardWord to a given word.
  *
  * Does a comparison of a BoardWord to a word; used to decide to add a word.
@@ -25,7 +30,7 @@ static gint boardwords_cmp_w(gconstpointer a,
                              gpointer data __attribute__ ((unused))) {
   const char *aa = ((BoardWord *) a)->word;
   const char *bb = b;
-  return strcasecmp(aa, bb);
+  return strcmp(aa, bb);
 }
 
 /** Compare boardwords by the actual word. */
@@ -47,6 +52,8 @@ static bool add_word(const char word[]) {
   BoardWord *new_word = malloc(sizeof(BoardWord));
   new_word->word = strdup(word);
   new_word->found = false;
+  board_nwords++;
+  board_score += WORD_SCORES[strlen(word)];
 
   g_sequence_insert_sorted(legal, new_word, boardwords_cmp, NULL);
   return true;
@@ -156,5 +163,7 @@ int guess_word(char word[]) {
   if (w->found) return -1;
 
   w->found = true;
+  player_nwords++;
+  player_score += WORD_SCORES[strlen(word)];
   return 1;
 }
