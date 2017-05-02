@@ -1,3 +1,0 @@
-#!/bin/bash
-cc -O2 ui.o check.o board.o dict.o /opt/local/lib/libncurses.a /opt/local/lib/libglib-2.0.a /opt/local/lib/libintl.a /opt/local/lib/libiconv.a -framework CoreFoundation -framework CoreServices
-strip ui
