@@ -1,26 +1,29 @@
-CFLAGS=-Wall -Wextra -O0 -g3
-LDLIBS=
+CFLAGS=-Wall -Wextra -O0 -g3 -fsanitize=address -fsanitize=undefined
+LDLIBS=-fsanitize=address -fsanitize=undefined
 
-# CFLAGS+=-fsanitize=address -fsanitize=undefined
-# LDLIBS+=-fsanitize=address -fsanitize=undefined
-#
 # CFLAGS=-Wall -Wextra -O2
 # LDLIBS=
 
-CFLAGS+=$(shell pkg-config --cflags ncurses)
-LDLIBS+=$(shell pkg-config --libs ncurses )
+CFLAGS+=$(shell pkg-config --cflags ncurses glib-2.0)
+LDLIBS+=$(shell pkg-config --libs ncurses glib-2.0)
 
-all: ui
+all: boggle
 
-check.o: check.c boggle.h
+%.o: %.c boggle.h Makefile
+	$(CC) $(CFLAGS) -c $< -o $@
 
-board.o: board.c boggle.h
+checkword: check.o board.o checkword.o dict.o
 
-checkword: check.o board.o checkword.o
-
-check: check.o board.o
-
-ui: ui.o check.o board.o
+boggle: ui.o check.o board.o dict.o
+	$(CC) $+ -o $@ $(LDLIBS) 
 
 clean:
-	rm -f *.o board boggle check
+	rm -f *.o boggle checkword boggle-static boggle.zip
+
+deploy:
+	rm -f *.o
+	make all CFLAGS="$(shell pkg-config --cflags ncurses glib-2.0)" LBLIBS="$(shell pkg-config --cflags ncurses glib-2.0)"
+	$(CC) -O2 -o boggle-static ui.o check.o board.o dict.o /opt/local/lib/libncurses.a /opt/local/lib/libglib-2.0.a /opt/local/lib/libintl.a /opt/local/lib/libiconv.a -framework CoreFoundation -framework CoreServices
+	strip boggle-static
+	upx --best --brute boggle-static
+	zip -9 boggle.zip boggle-static words.dat

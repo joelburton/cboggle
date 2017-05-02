@@ -1,175 +1,169 @@
 #include "boggle.h"
-#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
-/** Can we find the rest of this word, starting at i,j?
+/** DAWG handling. */
+
+#define CHILD_BIT_SHIFT 10
+#define EOW_BIT_MASK 0X00000200
+#define EOL_BIT_MASK 0X00000100
+#define LTR_BIT_MASK 0X000000FF
+
+#define DAWG_LETTER(arr, i) (arr[i] & LTR_BIT_MASK)
+#define DAWG_EOW(arr, i)    (arr[i] & EOW_BIT_MASK)
+#define DAWG_NEXT(arr, i)  ((arr[i] & EOL_BIT_MASK) ? 0 : i + 1)
+#define DAWG_CHILD(arr, i)  (arr[i] >> CHILD_BIT_SHIFT)
+
+/** Scoring */
+
+static const int WORD_SCORES[] = {
+  0, 0, 0, 1, 1, 2, 3, 5, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11};
+
+/** Compare a BoardWord to a given word.
  *
- * Look for the word, starting at tile [i,j]. Check to ensure
- * that this is a valid board square, that it matches the first
- * letter of the word sought, and that we have used this tile
- * before (track this by using `used` as a bitfield).
- * If this word is still possible, recurse and check in all directions
- * until this either succeeds or fails.
+ * Does a comparison of a BoardWord to a word; used to decide to add a word.
+ **/
+
+static gint boardwords_cmp_w(gconstpointer a,
+                             gconstpointer b,
+                             gpointer data __attribute__ ((unused))) {
+  const char *aa = ((BoardWord *) a)->word;
+  const char *bb = b;
+  return strcmp(aa, bb);
+}
+
+/** Compare boardwords by the actual word. */
+
+static gint boardwords_cmp(gconstpointer a,
+                           gconstpointer b,
+                           gpointer data __attribute__ ((unused))) {
+  const char *aa = ((BoardWord *) a) -> word;
+  const char *bb = ((BoardWord *) b) -> word;
+  return strcmp(aa, bb);
+}
+
+/** Add word to linked list of legal words. */
+
+static bool add_word(const char word[]) {
+  if (g_sequence_lookup(legal, (gpointer) word, boardwords_cmp_w, NULL))
+    return false;
+
+  BoardWord *new_word = malloc(sizeof(BoardWord));
+  new_word->word = strdup(word);
+  new_word->found = false;
+  board_nwords++;
+  board_score += WORD_SCORES[strlen(word)];
+
+  g_sequence_insert_sorted(legal, new_word, boardwords_cmp, NULL);
+  return true;
+}
+
+/** Find all words starting from this tile and trie.
+ *
+ * This is a recursive function -- it is given a tile (via y and x)
+ * and a trie pointer of where it is in a current word (along with the word
+ * and word_len for that word). For example, it might be given the tile at
+ * (1,1) and a trie-pointer to the end letter of C->A->T. For this example,
+ * word="CAT" and word_len=3. It would the note that "CAT" is a good word,
+ * and the recurse to all the neighboring tiles.
+ *
+ * Since you can only use a given tile once per word, it keeps a bitmask of
+ * used tile positions. If the tile at the given position is already used,
+ * this returns without continuing searching.
+ *
+ * @param lt         Pointer to current local trie
+ * @param word       Word that we're currently making
+ * @param word_len   length of word we're currently making
+ * @param y          y pos of tile
+ * @param x          x pos of tile
+ * @param used       bitmask of tile positions used
  */
 
-bool find_rest(const char word[], int i, int j, int_least64_t used) {
+static void find_words(
+    unsigned int i, char *word, int word_len, int y, int x, int_least64_t used) {
 
-    // If not a legal tile, can't make word here
-    if (i < 0 || i >= HEIGHT || j < 0 || j >= WIDTH)
-        return false;
+  // If not a legal tile, can't make word here
+  if (y < 0 || y >= HEIGHT || x < 0 || x >= WIDTH)
+    return;
 
-    // Doesn't match start of word, can't make word here
-    if (board[i][j] != word[0])
-        return false;
+  // Make bitmask for this tile position
+  int_least64_t mask = 0x1 << (y * WIDTH + x);
 
-    // Make bitmask for this tile position
-    int_least64_t mask = 0x1 << (i * WIDTH + j);
+  // If we've already used this tile, can't make word here
+  if (used & mask)
+    return;
 
-    // If we've already used this tile, can't make word here
-    if (used & mask)
-        return false;
+  // Find the trie for existing-trie plus this letter.
+  char sought = toupper(board[y][x]);
 
-    // Was that the last letter? If so, we found it
-    if (*(++word) == '\0')
-        return true;
+  while (i != 0 && DAWG_LETTER(dawg, i) != sought)
+    i = DAWG_NEXT(dawg, i);
 
-    // Mark tile as used
-    used |= mask;
+  if (i == 0)
+    // There are no words continuing with this letter
+    return;
 
-    // Check every direction H/V/D from here (will also re-check this tile, but
-    // the can't-reuse-this-tile rule prevents it from actually succeeding)
-    for (int di = -1; di < 2; di++)
-        for (int dj = -1; dj < 2; dj++)
-            if (find_rest(word, i + di, j + dj, used))
-                return true;
+  // Mark tile as used
+  used |= mask;
 
-    return false;
+  // Either this is a word, or the stem of a word. So update our 'word' to
+  // include this letter.
+  word[word_len++] = tolower(board[y][x]);
+
+  // Add this word to the found-words.
+  if (DAWG_EOW(dawg, i)) {
+    word[word_len] = '\0';
+    add_word(word);
+  }
+
+  // Check every direction H/V/D from here (will also re-check this tile, but
+  // the can't-reuse-this-tile rule prevents it from actually succeeding)
+  for (int di = -1; di < 2; di++)
+    for (int dj = -1; dj < 2; dj++)
+      find_words(DAWG_CHILD(dawg, i), word, word_len, y + di, x + dj, used);
 }
 
-/** Can this word be found on the board? */
+/** Free word inside a boardword. Called by g_sequence_free. */
 
-bool find_word(const char word[]) {
-    for (int i = 0; i < HEIGHT; i++)
-        for (int j = 0; j < WIDTH; j++)
-            if (find_rest(word, i, j, 0x0))
-                return true;
-
-    return false;
+void boardwords_free(gpointer bw) {
+  free((void *) ((BoardWord *) bw)->word);
 }
 
-bool add_word(char word[]) {
-    BoardWord *new_word = malloc(sizeof(BoardWord));
-    new_word->word = word;
-    new_word->found = false;
-    new_word->next = NULL;
+/** Find all words on board. */
 
-    if (legal == NULL) {
-        // First legal word!
-        legal = new_word;
-        return true;
-    }
+void find_all_words() {
+  legal = g_sequence_new(boardwords_free);
+  char *const word = malloc(17);
 
-    BoardWord *p = legal;
-    while (p->next != NULL) {
-        if (strcmp(p->word, word) == 0) {
-            free(new_word); /// didn't need it after all
-            return false;
-        }
-        p = p->next;
-    }
-
-    p->next = new_word;
-    return true;
+  for (int i = 0; i < HEIGHT; i++)
+    for (int j = 0; j < WIDTH; j++)
+      find_words(1, word, 0, i, j, 0x0);
 }
+
+/** Free list of legal words. */
 
 void free_words() {
-    while (legal != NULL) {
-        BoardWord *next = legal->next;
-        free(legal);
-        legal = next;
-    }
+  g_sequence_free(legal);
 }
 
-void print_words(WINDOW *win, bool found) {
-    BoardWord *p = legal;
-    int i = 0;
-    int rows = wwords_row - 2;
-    while (p != NULL) {
-        if (p->found == found) {
-            // mvwprintw(win, i / 5 + 1, (i % 5) * 15 + 2, "%s\n", p->word);
-            mvwprintw(win, i % rows + 1, (i / rows) * 15 + 2, "%s\n", p->word);
-            i++;
-        }
-        p = p->next;
-    }
-    box(win, 0, 0);
-    wrefresh(win);
-}
-
-/** Find all words */
-
-char * allwords[300000];
-int nallwords = 0;
-
-void read_all() {
-    FILE *dict = fopen(WORDS_PATH, "r");
-    char *word = NULL;
-    size_t bufsize = 0;
-    ssize_t nread;
-    while ((nread = getline(&word, &bufsize, dict)) > 0) {
-        word[nread - 1] = '\0'; // trim newline
-        allwords[nallwords++] = strdup(word);
-    }
-    free(word);
-}
-
-void check_all() {
-    for (int i = 0; i < nallwords; i++)
-        if (find_word(allwords[i])) {
-            printf("%s\n", allwords[i]);
-            add_word(allwords[i]);
-    }
-}
-
-/** Player guesses word
+/** Check player guess.
  *
- * 0 = not a word
- * -1 already guessed
- * 1 = ok
+ * @return 0 (not a word), -1 (already guessed), or 1 (good)
  */
 
 int guess_word(char word[]) {
-    BoardWord *p = legal;
-    while (p != NULL) {
-        if (strcmp(p->word, word) == 0) {
-            if (p->found)
-                return -1;
-            p->found = 1;
-            return 1;
-        }
-        p = p->next;
-    }
-    return 0;
-}
+  GSequenceIter *iter = g_sequence_lookup(
+      legal, (gpointer) word, boardwords_cmp_w, NULL);
 
-#if 0
-int main() {
-  make_board();
-  display_board();
-  check_all();
-  char *word = NULL;
-  size_t bufsize = 0;
-  int nread;
-  printf("\nWord? (control-D quits) ");
-  while ((nread = getline(&word, &bufsize, stdin)) > 0) {
-    word[nread - 1] = '\0';
-    printf("     %s: %d\n", word, guess_word(word));
-    printf("\nAnother? ");
-  }
-  printf("\n\nFound:\n");
-  print_words(true);
-  printf("\nMissed:\n");
-  print_words(false);
+  if (iter == NULL) return 0;
+
+  BoardWord *w = g_sequence_get(iter);
+
+  if (w->found) return -1;
+
+  w->found = true;
+  player_nwords++;
+  player_score += WORD_SCORES[strlen(word)];
+  return 1;
 }
-#endif
