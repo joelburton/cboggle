@@ -21,11 +21,11 @@ static int prompt_yn(const char *msg) {
   while (true) {
     char answer[4];
     mvwgetnstr(wprompt, 1, 2 + strlen(msg), answer, 3);
-    if (strcasecmp(answer, "y") == 0 || strcasecmp(answer, "yes") == 0) {
+    if (strcasecmp(answer, "y") == 0 || strncasecmp(answer, "yes", 3) == 0) {
       noecho();
       return true;
     }
-    if (strcasecmp(answer, "n") == 0 || strcasecmp(answer, "no") == 0) {
+    if (strcasecmp(answer, "n") == 0 || strncasecmp(answer, "no", 2) == 0) {
       noecho();
       return false;
     }
@@ -101,6 +101,7 @@ static void print_words(bool show_found, bool show_not_found) {
 
 _Noreturn void finish(int sig __attribute__ ((unused))) {
   endwin();
+  printf("\nHop along, little bunny!\n\n");
   exit(EXIT_SUCCESS);
 }
 
@@ -233,7 +234,7 @@ int main(int argc, char *argv[]) {
 
   getmaxyx(stdscr, winrow, wincol);
 
-  mvprintw(1, 19, "LOVELY LEVERET LEXIGAME v1.0");
+  mvprintw(1, 19, "LOVELY LEVERET LEXIGAME v1.1");
   refresh();
 
   wtimer = newwin(1, 10, 3, 52);
