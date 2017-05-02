@@ -1,3 +1,5 @@
+/** cboggle: a straightforward boggle game using ncurses and a DAWG. */
+
 #include <stdbool.h>
 #include <ncurses.h>
 #include <glib.h>
@@ -12,9 +14,7 @@
 #define WIDTH 4
 #define NTILES HEIGHT * WIDTH
 #define NTILES_STR "16"
-#define WORDS_PATH "3words.txt"
-
-char board[HEIGHT][WIDTH];
+#define WORDS_PATH "words.dat"
 
 typedef struct BoardWord_s {
   const char *word;
