@@ -22,7 +22,7 @@ clean:
 
 deploy:
 	rm -f *.o
-	make all CFLAGS="$(shell pkg-config --cflags ncurses glib-2.0)" LDLIBS="$(shell pkg-config --cflags ncurses glib-2.0)"
+	make all CFLAGS="$(shell pkg-config --cflags ncurses glib-2.0)" LDLIBS="$(shell pkg-config --libs ncurses glib-2.0)"
 	$(CC) -O2 -o boggle-static ui.o check.o board.o dict.o /opt/local/lib/libncurses.a /opt/local/lib/libglib-2.0.a /opt/local/lib/libintl.a /opt/local/lib/libiconv.a -framework CoreFoundation -framework CoreServices
 	strip boggle-static
 	upx --best --brute boggle-static

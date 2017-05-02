@@ -59,12 +59,12 @@ static bool add_word(const char word[]) {
   return true;
 }
 
-/** Find all words starting from this tile and trie.
+/** Find all words starting from this tile and DAWG-pointer.
  *
  * This is a recursive function -- it is given a tile (via y and x)
- * and a trie pointer of where it is in a current word (along with the word
+ * and a DAWG pointer of where it is in a current word (along with the word
  * and word_len for that word). For example, it might be given the tile at
- * (1,1) and a trie-pointer to the end letter of C->A->T. For this example,
+ * (1,1) and a DAWG-pointer to the end letter of C->A->T. For this example,
  * word="CAT" and word_len=3. It would the note that "CAT" is a good word,
  * and the recurse to all the neighboring tiles.
  *
@@ -72,7 +72,7 @@ static bool add_word(const char word[]) {
  * used tile positions. If the tile at the given position is already used,
  * this returns without continuing searching.
  *
- * @param lt         Pointer to current local trie
+ * @param i          Pointer to item in DAWG
  * @param word       Word that we're currently making
  * @param word_len   length of word we're currently making
  * @param y          y pos of tile
@@ -94,7 +94,7 @@ static void find_words(
   if (used & mask)
     return;
 
-  // Find the trie for existing-trie plus this letter.
+  // Find the DAWG-node for existing-DAWG-node plus this letter.
   char sought = toupper(board[y][x]);
 
   while (i != 0 && DAWG_LETTER(dawg, i) != sought)
