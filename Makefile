@@ -6,9 +6,9 @@ all: boggle
 %.o: %.c boggle.h Makefile
 	$(CC) $(CFLAGS) -c $< -o $@
 
-checkword: check.o board.o checkword.o dict.o
+checkword: check.o board.o checkword.o dict.o utils.o
 
-boggle: ui.o check.o board.o dict.o
+boggle: ui.o check.o board.o dict.o utils.o
 	$(CC) $+ -o $@ $(LDLIBS)
 
 clean:
@@ -19,7 +19,7 @@ clean:
 deploy:
 	rm -f *.o
 	make all CFLAGS="$(shell pkg-config --cflags ncurses glib-2.0)" LDLIBS="$(shell pkg-config --libs ncurses glib-2.0)"
-	$(CC) -O2 -o boggle-static ui.o check.o board.o dict.o \
+	$(CC) -O2 -o boggle-static ui.o check.o board.o dict.o utils.o \
 	    /usr/lib/libncurses.5.4.dylib /opt/local/lib/libglib-2.0.a \
 		/opt/local/lib/libintl.a /opt/local/lib/libiconv.a \
 		-framework CoreFoundation -framework CoreServices
@@ -32,5 +32,5 @@ deploy:
 here:
 	rm -f *.o
 	make all CFLAGS="$(shell pkg-config --cflags ncurses glib-2.0)" LDLIBS="$(shell pkg-config --libs ncurses glib-2.0)"
-	$(CC) -O2 -o boggle -static-libgcc ui.o check.o board.o dict.o $(shell pkg-config --libs ncurses glib-2.0)
+	$(CC) -O2 -o boggle -static-libgcc ui.o check.o board.o dict.o utils.o $(shell pkg-config --libs ncurses glib-2.0)
 	strip boggle

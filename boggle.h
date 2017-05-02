@@ -48,6 +48,9 @@ const int32_t * dawg;
 int round_length;
 _Noreturn void fatal(const char *func);
 
+// util.c
+char *strip_whitespace(char *str);
+_Noreturn void fatal(const char *func);
 
 
 #endif /* end of boggle_h */

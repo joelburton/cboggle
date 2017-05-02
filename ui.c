@@ -1,6 +1,6 @@
 #include "boggle.h"
-#include <stdlib.h>
 #include <ctype.h>
+#include <stdlib.h>
 #include <string.h>
 
 int winrow, wincol;
@@ -19,8 +19,10 @@ static int prompt_yn(const char *msg) {
   mvwprintw(wprompt, 1, 2, msg);
   echo();
   while (true) {
-    char answer[4];
+    char *answer = alloca(4);
     mvwgetnstr(wprompt, 1, 2 + strlen(msg), answer, 3);
+    answer = strip_whitespace(answer);
+
     if (strcasecmp(answer, "y") == 0 || strncasecmp(answer, "yes", 3) == 0) {
       noecho();
       return true;
@@ -48,7 +50,7 @@ static void display_board() {
   for (int y = 0; y < HEIGHT; y++)
     for (int x = 0; x < WIDTH; x++)
       // horiz: space letters out by 4, vert: by 2
-      mvwaddch(wboard, y * 2 + 1, x * 4 + 2, (const chtype) board[y][x]);
+      mvwaddch(wboard, y * 2 + 1, x * 4 + 2, (const chtype)board[y][x]);
 }
 
 /** Print words to curses window.
@@ -99,7 +101,7 @@ static void print_words(bool show_found, bool show_not_found) {
  * quit cleanly.
  */
 
-_Noreturn void finish(int sig __attribute__ ((unused))) {
+_Noreturn void finish(int sig __attribute__((unused))) {
   endwin();
   printf("\nHop along, little bunny!\n\n");
   exit(EXIT_SUCCESS);
@@ -116,11 +118,11 @@ static bool get_word(char *word, time_t start_round) {
   while (true) {
     int ch = mvwgetch(wprompt, 1, 4 + wl);
 
-    int left = (int) (round_length - (time(NULL) - start_round));
+    int left = (int)(round_length - (time(NULL) - start_round));
     mvwprintw(wtimer, 0, 0, "Secs: %3d", left);
     wrefresh(wtimer);
 
-    if (left <= 0 || ch == 4)   // ran out of time or CTRL-D
+    if (left <= 0 || ch == 4) // ran out of time or CTRL-D
       return true;
 
     if (ch == ERR)
@@ -146,7 +148,7 @@ static bool get_word(char *word, time_t start_round) {
       ch = tolower(ch);
 
     if (ch >= 'a' && ch <= 'z')
-      word[wl++] = (char) ch;
+      word[wl++] = (char)ch;
 
     mvwaddnstr(wprompt, 1, 4, word, wl);
   }
@@ -170,9 +172,9 @@ static void player_round() {
       // ran out of time, so round is over
       break;
 
-    (void) guess_word(word);
-    mvprintw(10, 1, "Correctly Guessed Words: %d, Score: %d",
-      player_nwords, player_score);
+    (void)guess_word(word);
+    mvprintw(10, 1, "Correctly Guessed Words: %d, Score: %d", player_nwords,
+             player_score);
     refresh();
     print_words(true, false);
   }
@@ -199,8 +201,7 @@ static void play_board() {
 
   display_board();
   wrefresh(wboard);
-  mvprintw(3, 19, "Board words: %d, score: %d",
-    board_nwords, board_score);
+  mvprintw(3, 19, "Board words: %d, score: %d", board_nwords, board_score);
   clrtoeol();
   refresh();
 
@@ -252,9 +253,4 @@ int main(int argc, char *argv[]) {
   while (prompt_yn("Play again? "));
 
   finish(0);
-}
-
-_Noreturn void fatal(const char *func) {
-  perror(func);
-  exit(EXIT_FAILURE);
 }
