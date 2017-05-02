@@ -1,6 +1,7 @@
 #include "boggle.h"
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
 
 int winrow, wincol;
 int wwords_row, wwords_col;
@@ -8,6 +9,29 @@ WINDOW *wboard;
 WINDOW *wwords;
 WINDOW *wprompt;
 WINDOW *wtimer;
+
+
+/** Prompt for a keypress -- used for status messages */
+
+static int prompt_yn(const char *msg) {
+  werase(wprompt);
+  box(wprompt, 0, 0);
+  mvwprintw(wprompt, 1, 2, msg);
+  echo();
+  while (true) {
+    char answer[4];
+    mvwgetnstr(wprompt, 1, 2 + strlen(msg), answer, 3);
+    if (strcasecmp(answer, "y") == 0 || strcasecmp(answer, "yes") == 0) {
+      noecho();
+      return true;
+    }
+    if (strcasecmp(answer, "n") == 0 || strcasecmp(answer, "no") == 0) {
+      noecho();
+      return false;
+    }
+    beep();
+  }
+}
 
 /** Prompt for a keypress -- used for status messages */
 
@@ -181,12 +205,13 @@ static void play_board() {
 
   player_round();
 
-  prompt("Press any key to see missed words ");
-  mvprintw(10, 1, "Missed Words:");
-  clrtoeol();
-  refresh();
+  if (prompt_yn("Do you want to see missed words? ")) {
+    mvprintw(10, 1, "Missed Words:");
+    clrtoeol();
+    refresh();
+    print_words(false, true);
+  }
 
-  print_words(false, true);
   free_words();
 }
 
@@ -223,7 +248,7 @@ int main(int argc, char *argv[]) {
 
   do
     play_board();
-  while (toupper(prompt("Play again? ")) == 'Y');
+  while (prompt_yn("Play again? "));
 
   finish(0);
 }
