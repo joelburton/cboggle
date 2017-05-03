@@ -1,36 +1,44 @@
-CFLAGS=-Wall -Wextra -O0 -g3 -fsanitize=address -fsanitize=undefined $(shell pkg-config --cflags ncurses glib-2.0)
-LDLIBS=-fsanitize=address -fsanitize=undefined $(shell pkg-config --libs ncurses glib-2.0)
+CFLAGS = -Wall -Wextra -O0 -g3 $(shell pkg-config --cflags ncurses glib-2.0)
+LDLIBS = $(shell pkg-config --libs ncurses glib-2.0)
+OBJS = ui.o check.o board.o dict.o utils.o
+
+boggle-linux boggle-osx: CFLAGS += -Os -g0
+debug: CFLAGS += -fsanitize=address,undefined
+debug: LDLIBS += -fsanitize=address,undefined
 
 all: boggle
 
 %.o: %.c boggle.h Makefile
-	$(CC) $(CFLAGS) -c $< -o $@
 
-checkword: check.o board.o checkword.o dict.o utils.o
+checkword: $(filter-out ui.o,$(OBJS)) checkword.o
 
-boggle: ui.o check.o board.o dict.o utils.o
-	$(CC) $+ -o $@ $(LDLIBS)
+boggle: $(OBJS)
+	$(CC) $(OBJS) -o $@ $(LDLIBS)
 
-clean:
-	rm -f *.o boggle checkword boggle-static boggle.zip
+debug: clean $(OBJS)
+		$(CC) $(OBJS) -o $@ $(LDLIBS)
+		rm -f *.o
 
 # Package up as a static file for OSX
-
-deploy:
-	rm -f *.o
-	make all CFLAGS="$(shell pkg-config --cflags ncurses glib-2.0)" LDLIBS="$(shell pkg-config --libs ncurses glib-2.0)"
-	$(CC) -O2 -o boggle-static ui.o check.o board.o dict.o utils.o \
+boggle-osx: clean $(OBJS)
+	$(if $(filter Darwin,$(shell uname)),,$(error Not Mac))
+	$(CC) -o $@ $(OBJS) \
 	    /usr/lib/libncurses.5.4.dylib /opt/local/lib/libglib-2.0.a \
-		/opt/local/lib/libintl.a /opt/local/lib/libiconv.a \
-		-framework CoreFoundation -framework CoreServices
-	strip boggle-static
-	upx --best --brute boggle-static
-	zip -9 boggle.zip boggle-static words.dat
-
-# Package up as an in-place for Linux
-
-here:
+			/opt/local/lib/libintl.a /opt/local/lib/libiconv.a \
+			-framework CoreFoundation -framework CoreServices
+	strip $@
+	upx --best --brute $@
+	zip -9 boggle.zip $@ words.dat
 	rm -f *.o
-	make all CFLAGS="$(shell pkg-config --cflags ncurses glib-2.0)" LDLIBS="$(shell pkg-config --libs ncurses glib-2.0)"
-	$(CC) -O2 -o boggle -static-libgcc ui.o check.o board.o dict.o utils.o $(shell pkg-config --libs ncurses glib-2.0)
-	strip boggle
+
+# Package up as a static file for Linux
+boggle-linux: clean $(OBJS)
+	$(if $(filter Linux,$(shell uname)),,$(error Not Linux))
+	$(CC) -o $@ -static-libgcc $(OBJS)
+	strip $@
+	rm -f *.0
+
+clean:
+		rm -f *.o boggle debug boggle-osx boggle-linux checkword boggle.zip
+
+.PHONY: clean all

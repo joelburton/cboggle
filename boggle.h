@@ -14,7 +14,7 @@
 #define HEIGHT 4
 #define WIDTH 4
 #define WORDS_PATH "words.dat"
-#define FATAL(m) err(1, "%s:%i: %s", __FILE__, __LINE__, m)
+#define FATAL(m) err(1, "%s:%i: %s: %s", __FILE__, __LINE__, __func__, m)
 
 typedef struct BoardWord_s {
   const char *word;
