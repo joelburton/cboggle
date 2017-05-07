@@ -126,7 +126,7 @@ static void find_words(
 
 /** Free word inside a boardword. Called by g_sequence_free. */
 
-void boardwords_free(gpointer bw) {
+static void boardwords_free(gpointer bw) {
   free((void *) ((BoardWord *) bw)->word);
 }
 

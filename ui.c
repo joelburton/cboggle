@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <libgen.h>
 
 int winrow, wincol;
 int wwords_row, wwords_col;
@@ -110,13 +111,12 @@ _Noreturn void finish(int sig __attribute__((unused))) {
 
 /** Get a word, while updating timer. */
 
-static bool get_word(char *word, time_t start_round) {
+static bool get_word(char *word, char *prev, time_t start_round) {
   int wl = 0;
-  char *blank = "                 ";
-  mvwaddstr(wprompt, 1, 4, blank);
   halfdelay(1);
 
   while (true) {
+    mvwprintw(wprompt, 1, 4, "%-16s", word);
     int ch = mvwgetch(wprompt, 1, 4 + wl);
 
     int left = (int)(round_length - (time(NULL) - start_round));
@@ -138,20 +138,32 @@ static bool get_word(char *word, time_t start_round) {
 
     if (ch == KEY_BACKSPACE || ch == KEY_LEFT || ch == 127) {
       if (wl > 0)
-        mvwaddch(wprompt, 1, 4 + (--wl), ' ');
+        word[--wl] = '\0';
     }
 
-    if (wl >= 16)
-      // word is max length
-      continue;
+    // Next two are lightweight-history; can up/down arrow
+    // to move from this word to prev
+    if (ch == KEY_UP && prev[0] != '\0') {
+      strcpy(word, prev);
+      prev[0] = '\0';
+      wl = strlen(word);
+    }
 
-    if (ch >= 'A' && ch <= 'Z')
-      ch = tolower(ch);
+    if (ch == KEY_DOWN && prev[0] == '\0') {
+      strcpy(prev, word);
+      word[0] = '\0';
+      wl = 0;
+    }
 
-    if (ch >= 'a' && ch <= 'z')
-      word[wl++] = (char)ch;
+    if (wl < 16) {
+      if (ch >= 'A' && ch <= 'Z')
+        ch = tolower(ch);
 
-    mvwaddnstr(wprompt, 1, 4, word, wl);
+      if (ch >= 'a' && ch <= 'z')
+        word[wl++] = (char)ch;
+    }
+
+    word[wl] = '\0';
   }
 }
 
@@ -165,11 +177,15 @@ static void player_round() {
   box(wprompt, 0, 0);
   mvwprintw(wprompt, 1, 2, "> ");
   char word[17];
+  char prev[17];
+  prev[0] = '\0';
+
   time_t start_round = time(NULL);
   halfdelay(1);
 
   while (true) {
-    if (get_word(word, start_round))
+    word[0] = '\0';
+    if (get_word(word, prev, start_round))
       // ran out of time, so round is over
       break;
 
@@ -178,6 +194,7 @@ static void player_round() {
              player_score);
     refresh();
     print_words(true, false);
+    strcpy(prev, word);
   }
 
   cbreak();
@@ -227,7 +244,11 @@ int main(int argc, char *argv[]) {
   else
     round_length = 300;
 
-  read_all();
+  // determine if this is being run locally -- if so, we look
+  // for the dictionary here
+
+  bool local = strcmp(argv[0], basename(argv[0])) != 0;
+  read_all(local);
 
   initscr();
   signal(SIGINT, finish);

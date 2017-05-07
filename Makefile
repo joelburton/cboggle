@@ -9,6 +9,7 @@ debug: LDLIBS += -fsanitize=address,undefined
 all: boggle
 
 %.o: %.c boggle.h Makefile
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 checkword: $(filter-out ui.o,$(OBJS)) checkword.o
 

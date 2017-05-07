@@ -13,8 +13,11 @@
 // should work.
 #define HEIGHT 4
 #define WIDTH 4
-#define WORDS_PATH "words.dat"
+#define WORDS_PATH "/usr/local/share/boggle/words.dat"
+#define WORDS_LOCAL_PATH "words.dat"
 #define FATAL(m) err(1, "%s:%i: %s: %s", __FILE__, __LINE__, __func__, m)
+#define FATAL2(m, m2) \
+  err(1, "%s:%i: %s: %s %s", __FILE__, __LINE__, __func__, m, m2)
 
 typedef struct BoardWord_s {
   const char *word;
@@ -40,7 +43,7 @@ int guess_word(char word[]);
 
 // dict.c
 
-void read_all();
+void read_all(bool local);
 const int32_t * dawg;
 
 // ui.c
