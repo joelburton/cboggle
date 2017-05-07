@@ -20,6 +20,9 @@ debug: clean $(OBJS)
 		$(CC) $(OBJS) -o $@ $(LDLIBS)
 		rm -f *.o
 
+install: boggle
+	sudo cp boggle /usr/local/bin
+
 # Package up as a static file for OSX
 boggle-osx: clean $(OBJS)
 	$(if $(filter Darwin,$(shell uname)),,$(error Not Mac))
