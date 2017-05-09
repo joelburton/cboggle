@@ -15,6 +15,3 @@ To compile this, you'll need:
 
 - ncurses-dev (OSX and Linux often have this; can install for Linux via
   your package manager)
-
-- glibc-dev (can install for OSX via MacPorts or for Linux via your
-  package manager)
