@@ -4,6 +4,7 @@
 #include <string.h>
 #include <assert.h>
 #include <libgen.h>
+#include <time.h>
 
 int winrow, wincol;
 int wwords_row, wwords_col;
@@ -63,35 +64,41 @@ static void display_board() {
 
 #define COL_WIDTH 15
 
-static void print_words(bool show_found, bool show_not_found) {
-  const int rows = wwords_row - 2;
-  const int cols = wwords_col / COL_WIDTH;
-  const int nresults = g_sequence_get_length(legal);
-  int i = 0;
+int p_rows, p_cols, p_c;
+bool p_show_found, p_show_not_found;
 
-  GSequenceIter *p = g_sequence_get_begin_iter(legal);
+void printNode(const void *n, VISIT value, int level __attribute__((unused))) {
+  const BoardWord *bw = *(const BoardWord **)n;
 
-  while (i < nresults) {
-    int c = 0;
-    werase(wwords);
-    if (i > 0)
-      prompt("Press any key to see more words ");
+  if (value == leaf || value == postorder) {
+    if ((p_show_found && bw->found) || (p_show_not_found && !bw->found)) {
+      int y = p_c % p_rows + 1;
+      int x = (p_c / p_rows) * COL_WIDTH + 2;
+      mvwprintw(wwords, y, x, "%s\n", bw->word);
+      p_c += 1;
 
-    while (c < (rows * cols) && i < nresults) {
-      BoardWord *bw = g_sequence_get(p);
-
-      if ((show_found && bw->found) || (show_not_found && !bw->found)) {
-        int y = c % rows + 1;
-        int x = (c / rows) * COL_WIDTH + 2;
-        mvwprintw(wwords, y, x, "%s\n", bw->word);
-        c += 1;
+      if (p_c % (p_rows * p_cols) == 0) {
+        box(wwords, 0, 0);
+        wrefresh(wwords);
+        prompt("Press any key to see more words ");
+        p_c = 0;
+        werase(wwords);
       }
-      i++;
-      p = g_sequence_iter_next(p);
     }
+  }
+}
+
+void print_words(bool show_found, bool show_not_found) {
+    p_rows = wwords_row - 2;
+    p_cols = wwords_col / COL_WIDTH;
+    p_c = 0;
+    p_show_found = show_found;
+    p_show_not_found = show_not_found;
+
+    werase(wwords);
+    twalk(legal, printNode);
     box(wwords, 0, 0);
     wrefresh(wwords);
-  }
 }
 
 /** Finish program.
@@ -191,7 +198,7 @@ static void player_round() {
 
     (void)guess_word(word);
     mvprintw(10, 1, "Correctly Guessed Words: %d, Score: %d", player_nwords,
-             player_score);
+        player_score);
     refresh();
     print_words(true, false);
     strcpy(prev, word);

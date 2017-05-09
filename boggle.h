@@ -2,8 +2,8 @@
 
 #include <stdbool.h>
 #include <ncurses.h>
-#include <glib.h>
 #include <err.h>
+#include <search.h>
 
 #ifndef BOGGLE_H
 #define BOGGLE_H
@@ -24,7 +24,7 @@ typedef struct BoardWord_s {
   bool found;
 } BoardWord;
 
-GSequence *legal;
+BoardWord *legal;
 int board_nwords;
 int board_score;
 int player_nwords;

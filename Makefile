@@ -1,5 +1,5 @@
-CFLAGS = -Wall -Wextra -O0 -g3 $(shell pkg-config --cflags ncurses glib-2.0)
-LDLIBS = $(shell pkg-config --libs ncurses glib-2.0)
+CFLAGS = -Wall -Wextra -O0 -g3 $(shell pkg-config --cflags ncurses)
+LDLIBS = $(shell pkg-config --libs ncurses)
 OBJS = ui.o check.o board.o dict.o utils.o
 
 boggle-linux boggle-osx: CFLAGS += -Os -g0
@@ -27,8 +27,7 @@ install: boggle
 boggle-osx: clean $(OBJS)
 	$(if $(filter Darwin,$(shell uname)),,$(error Not Mac))
 	$(CC) -o $@ $(OBJS) \
-	    /usr/lib/libncurses.5.4.dylib /opt/local/lib/libglib-2.0.a \
-			/opt/local/lib/libintl.a /opt/local/lib/libiconv.a \
+	    /usr/lib/libncurses.5.4.dylib \
 			-framework CoreFoundation -framework CoreServices
 	strip $@
 	upx --best --brute $@
