@@ -1,8 +1,9 @@
-CFLAGS = -Wall -Wextra -O0 -g3 $(shell pkg-config --cflags ncurses)
+INCLUDES = $(shell pkg-config --cflags ncurses)
+CFLAGS = -Wall -Wextra -O0 -g3 $(INCLUDES)
 LDLIBS = $(shell pkg-config --libs ncurses)
 OBJS = ui.o check.o board.o dict.o utils.o
 
-boggle-linux boggle-osx: CFLAGS += -Os -g0
+boggle-linux boggle-osx: CFLAGS = -Os -g0 $(INCLUDES)
 debug: CFLAGS += -fsanitize=address,undefined
 debug: LDLIBS += -fsanitize=address,undefined
 
@@ -17,8 +18,8 @@ boggle: $(OBJS)
 	$(CC) $(OBJS) -o $@ $(LDLIBS)
 
 debug: clean $(OBJS)
-		$(CC) $(OBJS) -o $@ $(LDLIBS)
-		rm -f *.o
+	$(CC) $(OBJS) -o $@ $(LDLIBS)
+	rm -f *.o
 
 install: boggle
 	sudo cp boggle /usr/local/bin
@@ -27,8 +28,8 @@ install: boggle
 boggle-osx: clean $(OBJS)
 	$(if $(filter Darwin,$(shell uname)),,$(error Not Mac))
 	$(CC) -o $@ $(OBJS) \
-	    /usr/lib/libncurses.5.4.dylib \
-			-framework CoreFoundation -framework CoreServices
+	  /usr/lib/libncurses.5.4.dylib \
+	  -framework CoreFoundation -framework CoreServices
 	strip $@
 	upx --best --brute $@
 	zip -9 boggle.zip $@ words.dat
@@ -42,6 +43,6 @@ boggle-linux: clean $(OBJS)
 	rm -f *.0
 
 clean:
-		rm -f *.o boggle debug boggle-osx boggle-linux checkword boggle.zip
+	rm -f *.o boggle debug boggle-osx boggle-linux checkword boggle.zip
 
-.PHONY: clean all
+.PHONY: clean all install

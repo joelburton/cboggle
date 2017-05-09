@@ -56,44 +56,57 @@ static void display_board() {
       mvwaddch(wboard, y * 2 + 1, x * 4 + 2, (const chtype)board[y][x]);
 }
 
+/** State information about word-list printing.
+ *
+ * We need a global var for this, since the binary tree walking interface
+ * uses a callback and provides no way to pass state in.
+ */
+
+struct PrintStatus {
+    int rows;
+    int cols;
+    int c;      // # of items printed on this page
+    bool show_found;
+    bool show_not_found;
+} ps;
+
+/** Print a node -- called during traversal. */
+
+#define COL_WIDTH 15
+
+void printNode(const void *n, VISIT value, int level __attribute__((unused))) {
+  if (value == leaf || value == postorder) {
+    const BoardWord *bw = *(const BoardWord **)n;
+    if ((ps.show_found && bw->found) || (ps.show_not_found && !bw->found)) {
+
+      if (ps.c == ps.rows * ps.cols) {
+        box(wwords, 0, 0);
+        wrefresh(wwords);
+        prompt("Press any key to see more words ");
+        ps.c = 0;
+        werase(wwords);
+      }
+
+      int y = ps.c % ps.rows + 1;
+      int x = (ps.c / ps.rows) * COL_WIDTH + 2;
+      mvwaddstr(wwords, y, x, bw->word);
+      ps.c += 1;
+    }
+  }
+}
+
 /** Print words to curses window.
  *
  * @param show_found
  * @param show_not_found
  */
 
-#define COL_WIDTH 15
-
-int p_rows, p_cols, p_c;
-bool p_show_found, p_show_not_found;
-
-void printNode(const void *n, VISIT value, int level __attribute__((unused))) {
-  const BoardWord *bw = *(const BoardWord **)n;
-
-  if (value == leaf || value == postorder) {
-    if ((p_show_found && bw->found) || (p_show_not_found && !bw->found)) {
-      int y = p_c % p_rows + 1;
-      int x = (p_c / p_rows) * COL_WIDTH + 2;
-      mvwprintw(wwords, y, x, "%s\n", bw->word);
-      p_c += 1;
-
-      if (p_c % (p_rows * p_cols) == 0) {
-        box(wwords, 0, 0);
-        wrefresh(wwords);
-        prompt("Press any key to see more words ");
-        p_c = 0;
-        werase(wwords);
-      }
-    }
-  }
-}
-
 void print_words(bool show_found, bool show_not_found) {
-    p_rows = wwords_row - 2;
-    p_cols = wwords_col / COL_WIDTH;
-    p_c = 0;
-    p_show_found = show_found;
-    p_show_not_found = show_not_found;
+    ps.rows = wwords_row - 2;
+    ps.cols = wwords_col / COL_WIDTH;
+    ps.c = 0;
+    ps.show_found = show_found;
+    ps.show_not_found = show_not_found;
 
     werase(wwords);
     twalk(legal, printNode);
