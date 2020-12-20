@@ -13,7 +13,8 @@ set(SOURCE_FILES
         boggle.h
         check.c
         checkword.c
-        ui.c dict.c)
+        ui.c 
+	dict.c)
 
 add_executable(boggle ${SOURCE_FILES})
 target_link_libraries(${PROJECT_NAME} ${CURSES_LIBRARIES} ${GLIB_LIBRARIES})

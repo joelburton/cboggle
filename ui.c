@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <libgen.h>
 #include <time.h>
+#include <signal.h>
 
 int winrow, wincol;
 int wwords_row, wwords_col;
