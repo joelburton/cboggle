@@ -137,6 +137,8 @@ void find_all_words() {
   for (int i = 0; i < HEIGHT; i++)
     for (int j = 0; j < WIDTH; j++)
       find_words(1, word, 0, i, j, 0x0);
+
+  free(word);
 }
 
 /** Free list of legal words. */
