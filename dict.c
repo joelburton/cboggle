@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include "boggle.h"
 
+const int32_t * dawg;
 
 /** Read dictionary file.
  *

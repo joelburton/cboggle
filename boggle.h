@@ -24,15 +24,15 @@ typedef struct BoardWord_s {
   bool found;
 } BoardWord;
 
-BoardWord *legal;
-int board_nwords;
-int board_score;
-int player_nwords;
-int player_score;
+extern BoardWord *legal;
+extern int board_nwords;
+extern int board_score;
+extern int player_nwords;
+extern int player_score;
 
 // board.c
 
-char board[HEIGHT][WIDTH];
+extern char board[HEIGHT][WIDTH];
 void make_board();
 
 // check.c
@@ -44,15 +44,15 @@ int guess_word(char word[]);
 // dict.c
 
 void read_all(bool local);
-const int32_t * dawg;
+extern const int32_t * dawg;
 
 // ui.c
 
-int round_length;
+extern int round_length;
 _Noreturn void fatal(const char *func);
 
 // util.c
-char *strip_whitespace(char *str);
+extern char *strip_whitespace(char *str);
 _Noreturn void fatal(const char *func);
 
 

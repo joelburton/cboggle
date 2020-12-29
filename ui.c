@@ -7,6 +7,13 @@
 #include <time.h>
 #include <signal.h>
 
+BoardWord *legal;
+int board_score;
+int board_nwords;
+int player_nwords;
+int player_score;
+int round_length;
+
 int winrow, wincol;
 int wwords_row, wwords_col;
 WINDOW *wboard;
