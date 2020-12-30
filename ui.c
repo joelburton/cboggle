@@ -132,8 +132,7 @@ void print_words(bool show_found, bool show_not_found) {
 
 _Noreturn void finish(int sig __attribute__((unused))) {
     endwin();
-    printf("\nHop along, little bunny!\n\n");
-    exit(EXIT_SUCCESS);
+    exit(sig + 128);
 }
 
 /** Get a word, while updating timer. */
@@ -279,12 +278,13 @@ int main(int argc, char *argv[]) {
 
     initscr();
     signal(SIGINT, finish);
+    signal(SIGTERM, finish);
     cbreak();
     noecho();
 
     getmaxyx(stdscr, winrow, wincol);
 
-    mvprintw(1, 19, "LOVELY LEVERET LEXIGAME v1.1");
+    mvprintw(1, 19, "LOVELY LEVERET LEXIGAME v1.2");
     refresh();
 
     wtimer = newwin(1, 10, 3, 52);
@@ -301,5 +301,7 @@ int main(int argc, char *argv[]) {
         play_board();
     while (prompt_yn("Play again? "));
 
-    finish(0);
+    endwin();
+    puts("\nHop along, little leveret!\n");
+    exit(EXIT_SUCCESS);
 }
