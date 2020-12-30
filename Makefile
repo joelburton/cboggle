@@ -23,6 +23,8 @@ debug: clean $(OBJS)
 
 install: boggle
 	sudo cp boggle /usr/local/bin
+	sudo mkdir -p /usr/local/share/boggle
+	sudo cp words.dat /usr/local/share/boggle
 
 # Package up as a static file for OSX
 boggle-osx: clean $(OBJS)

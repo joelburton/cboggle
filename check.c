@@ -18,35 +18,35 @@
 /** Scoring */
 
 static const int WORD_SCORES[] = {
-  0, 0, 0, 1, 1, 2, 3, 5, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11};
+        0, 0, 0, 1, 1, 2, 3, 5, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11};
 
-/** Compare boardwords by the actual word. */
+/** Compare board words by the actual word. */
 
 static int boardwords_cmp(const void *a,
                           const void *b) {
-  const BoardWord *aa = a;
-  const BoardWord *bb = b;
-  return strcmp(aa->word, bb->word);
+    const BoardWord *aa = a;
+    const BoardWord *bb = b;
+    return strcmp(aa->word, bb->word);
 }
 
-/** Add word to linked list of legal words. */
+/** Add word to tree of legal words. Returns T/F if it is new. */
 
 static bool add_word(const char word[]) {
-  BoardWord *new_word = malloc(sizeof(BoardWord));
-  new_word->word = word;
-  new_word->found = false;
+    BoardWord *new_word = malloc(sizeof(BoardWord));
+    new_word->word = word;
+    new_word->found = false;
 
-  BoardWord *added = tsearch(new_word, (void **) &legal, boardwords_cmp);
-  if (new_word == * (BoardWord **) added) {
-      // added as a new word
-      new_word->word = strdup(word);   // now we know we'll keep it, so strdup it
-      board_nwords++;
-      board_score += WORD_SCORES[strlen(word)];
-      return true;
-  } else {
-      free(new_word);
-      return false;
-  }
+    BoardWord **newNode = tsearch(new_word, (void **) &legal, boardwords_cmp);
+    if (new_word == *newNode) {
+        // newNode is a new word
+        new_word->word = strdup(word);   // now we know we'll keep it, so strdup it
+        board_nwords++;
+        board_score += WORD_SCORES[strlen(word)];
+        return true;
+    } else {
+        free(new_word);
+        return false;
+    }
 }
 
 /** Find all words starting from this tile and DAWG-pointer.
@@ -71,74 +71,72 @@ static bool add_word(const char word[]) {
  */
 
 static void find_words(
-    unsigned int i, char *word, int word_len, int y, int x, int_least64_t used) {
+        unsigned int i, char *word, int word_len, int y, int x, int_least64_t used) {
 
-  // If not a legal tile, can't make word here
-  if (y < 0 || y >= HEIGHT || x < 0 || x >= WIDTH)
-    return;
+    // If not a legal tile, can't make word here
+    if (y < 0 || y >= HEIGHT || x < 0 || x >= WIDTH)
+        return;
 
-  // Make bitmask for this tile position
-  int_least64_t mask = 0x1 << (y * WIDTH + x);
+    // Make bitmask for this tile position
+    int_least64_t mask = 0x1 << (y * WIDTH + x);
 
-  // If we've already used this tile, can't make word here
-  if (used & mask)
-    return;
+    // If we've already used this tile, can't make word here
+    if (used & mask)
+        return;
 
-  // Find the DAWG-node for existing-DAWG-node plus this letter.
-  char sought = toupper(board[y][x]);
+    // Find the DAWG-node for existing-DAWG-node plus this letter.
+    char sought = toupper(board[y][x]); // NOLINT(cppcoreguidelines-narrowing-conversions)
 
-  while (i != 0 && DAWG_LETTER(dawg, i) != sought)
-    i = DAWG_NEXT(dawg, i);
+    while (i != 0 && DAWG_LETTER(dawg, i) != sought)
+        i = DAWG_NEXT(dawg, i);
 
-  if (i == 0)
-    // There are no words continuing with this letter
-    return;
+    if (i == 0)
+        // There are no words continuing with this letter
+        return;
 
-  // Mark tile as used
-  used |= mask;
+    // Mark tile as used
+    used |= mask;
 
-  // Either this is a word, or the stem of a word. So update our 'word' to
-  // include this letter.
-  word[word_len++] = tolower(board[y][x]);
+    // Either this is a word, or the stem of a word. So update our 'word' to
+    // include this letter.
+    word[word_len++] = tolower(board[y][x]); // NOLINT(cppcoreguidelines-narrowing-conversions)
 
-  // Add this word to the found-words.
-  if (DAWG_EOW(dawg, i)) {
-    word[word_len] = '\0';
-    add_word(word);
-  }
+    // Add this word to the found-words.
+    if (DAWG_EOW(dawg, i)) {
+        word[word_len] = '\0';
+        add_word(word);
+    }
 
-  // Check every direction H/V/D from here (will also re-check this tile, but
-  // the can't-reuse-this-tile rule prevents it from actually succeeding)
-  for (int di = -1; di < 2; di++)
-    for (int dj = -1; dj < 2; dj++)
-      find_words(DAWG_CHILD(dawg, i), word, word_len, y + di, x + dj, used);
+    // Check every direction H/V/D from here (will also re-check this tile, but
+    // the can't-reuse-this-tile rule prevents it from actually succeeding)
+    for (int di = -1; di < 2; di++)
+        for (int dj = -1; dj < 2; dj++)
+            find_words(DAWG_CHILD(dawg, i), word, word_len, y + di, x + dj, used);
 }
 
-/** Free word inside a boardword. Called by g_sequence_free. */
+/** Free word inside a BoardWord. Called by g_sequence_free. */
 
 
 void delNode(
-    const void *nodep, VISIT value, int level __attribute__((unused))) {
-  const BoardWord *n = *(const BoardWord **)nodep;
+        const void *nodep, VISIT value, int level __attribute__((unused))) {
+    const BoardWord *n = *(const BoardWord **) nodep;
 
-  if (value == leaf || value == endorder) {
-      free((void *)n->word);
-      free((void *)n);
-      free((void *)nodep);
-  }
+    if (value == leaf || value == endorder) {
+        free((void *) n->word);
+        free((void *) n);
+        free((void *) nodep);
+    }
 }
 
 
 /** Find all words on board. */
 
 void find_all_words() {
-  char *const word = malloc(17);
+    char *const word = alloca(17);
 
-  for (int i = 0; i < HEIGHT; i++)
-    for (int j = 0; j < WIDTH; j++)
-      find_words(1, word, 0, i, j, 0x0);
-
-  free(word);
+    for (int i = 0; i < HEIGHT; i++)
+        for (int j = 0; j < WIDTH; j++)
+            find_words(1, word, 0, i, j, 0x0);
 }
 
 /** Free list of legal words. */
@@ -154,19 +152,20 @@ void free_words() {
  */
 
 int guess_word(char word[]) {
-  BoardWord *bw = calloc(sizeof(BoardWord), 1);
-  bw->word = word;
-  BoardWord *found = tfind(bw, (void **) &legal, boardwords_cmp);
-  free(bw);
+    BoardWord *bw = alloca(sizeof(BoardWord));
+    bw->word = word;
+    BoardWord **found = tfind(bw, (void **) &legal, boardwords_cmp);
 
-  if (found == NULL) return 0;
+    if (found == NULL) return 0;
 
-  found = * (BoardWord **) found;
+    // "found" is pointer to tree node (which is pointer to BoardWord);
+    // make it now a pointer to the BoardWord itself
+    //found = * (BoardWord **) found;
 
-  if (found->found) return -1;
+    if ((*found)->found) return -1;
 
-  found->found = true;
-  player_nwords++;
-  player_score += WORD_SCORES[strlen(word)];
-  return 1;
+    (*found)->found = true;
+    player_nwords++;
+    player_score += WORD_SCORES[strlen(word)];
+    return 1;
 }

@@ -2,7 +2,6 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 #include <libgen.h>
 #include <time.h>
 #include <signal.h>
@@ -25,43 +24,43 @@ WINDOW *wtimer;
 /** Prompt for a keypress -- used for status messages */
 
 static int prompt_yn(const char *msg) {
-  werase(wprompt);
-  box(wprompt, 0, 0);
-  mvwprintw(wprompt, 1, 2, msg);
-  echo();
-  while (true) {
-    char buffer[4], answer[4];
-    mvwgetnstr(wprompt, 1, 2 + strlen(msg), buffer, 3);
-    sscanf(buffer, "%s", answer);
+    werase(wprompt);
+    box(wprompt, 0, 0);
+    mvwprintw(wprompt, 1, 2, msg);
+    echo();
+    while (true) {
+        char buffer[4], answer[4];
+        mvwgetnstr(wprompt, 1, 2 + strlen(msg), buffer, 3);
+        sscanf(buffer, "%s", answer);
 
-    if (strcasecmp(answer, "y") == 0 || strncasecmp(answer, "yes", 3) == 0) {
-      noecho();
-      return true;
+        if (strcasecmp(answer, "y") == 0 || strncasecmp(answer, "yes", 3) == 0) {
+            noecho();
+            return true;
+        }
+        if (strcasecmp(answer, "n") == 0 || strncasecmp(answer, "no", 2) == 0) {
+            noecho();
+            return false;
+        }
+        beep();
     }
-    if (strcasecmp(answer, "n") == 0 || strncasecmp(answer, "no", 2) == 0) {
-      noecho();
-      return false;
-    }
-    beep();
-  }
 }
 
 /** Prompt for a keypress -- used for status messages */
 
 static int prompt(const char *msg) {
-  werase(wprompt);
-  box(wprompt, 0, 0);
-  mvwprintw(wprompt, 1, 2, msg);
-  return wgetch(wprompt);
+    werase(wprompt);
+    box(wprompt, 0, 0);
+    mvwprintw(wprompt, 1, 2, msg);
+    return wgetch(wprompt);
 }
 
 /** Display board in curses window. */
 
 static void display_board() {
-  for (int y = 0; y < HEIGHT; y++)
-    for (int x = 0; x < WIDTH; x++)
-      // horiz: space letters out by 4, vert: by 2
-      mvwaddch(wboard, y * 2 + 1, x * 4 + 2, (const chtype)board[y][x]);
+    for (int y = 0; y < HEIGHT; y++)
+        for (int x = 0; x < WIDTH; x++)
+            // horiz: space letters out by 4, vert: by 2
+            mvwaddch(wboard, y * 2 + 1, x * 4 + 2, (const chtype) board[y][x]);
 }
 
 /** State information about word-list printing.
@@ -83,24 +82,24 @@ struct PrintStatus {
 #define COL_WIDTH 15
 
 void printNode(const void *n, VISIT value, int level __attribute__((unused))) {
-  if (value == leaf || value == postorder) {
-    const BoardWord *bw = *(const BoardWord **)n;
-    if ((ps.show_found && bw->found) || (ps.show_not_found && !bw->found)) {
+    if (value == leaf || value == postorder) {
+        const BoardWord *bw = *(const BoardWord **) n;
+        if ((ps.show_found && bw->found) || (ps.show_not_found && !bw->found)) {
 
-      if (ps.c == ps.rows * ps.cols) {
-        box(wwords, 0, 0);
-        wrefresh(wwords);
-        prompt("Press any key to see more words ");
-        ps.c = 0;
-        werase(wwords);
-      }
+            if (ps.c == ps.rows * ps.cols) {
+                box(wwords, 0, 0);
+                wrefresh(wwords);
+                prompt("Press any key to see more words ");
+                ps.c = 0;
+                werase(wwords);
+            }
 
-      int y = ps.c % ps.rows + 1;
-      int x = (ps.c / ps.rows) * COL_WIDTH + 2;
-      mvwaddstr(wwords, y, x, bw->word);
-      ps.c += 1;
+            int y = ps.c % ps.rows + 1;
+            int x = (ps.c / ps.rows) * COL_WIDTH + 2;
+            mvwaddstr(wwords, y, x, bw->word);
+            ps.c += 1;
+        }
     }
-  }
 }
 
 /** Print words to curses window.
@@ -132,175 +131,175 @@ void print_words(bool show_found, bool show_not_found) {
  */
 
 _Noreturn void finish(int sig __attribute__((unused))) {
-  endwin();
-  printf("\nHop along, little bunny!\n\n");
-  exit(EXIT_SUCCESS);
+    endwin();
+    printf("\nHop along, little bunny!\n\n");
+    exit(EXIT_SUCCESS);
 }
 
 /** Get a word, while updating timer. */
 
 static bool get_word(char *word, char *prev, time_t start_round) {
-  int wl = 0;
-  halfdelay(1);
+    int wl = 0;
+    halfdelay(1);
 
-  while (true) {
-    mvwprintw(wprompt, 1, 4, "%-16s", word);
-    int ch = mvwgetch(wprompt, 1, 4 + wl);
+    while (true) {
+        mvwprintw(wprompt, 1, 4, "%-16s", word);
+        int ch = mvwgetch(wprompt, 1, 4 + wl);
 
-    int left = (int)(round_length - (time(NULL) - start_round));
-    mvwprintw(wtimer, 0, 0, "Secs: %3d", left);
-    wrefresh(wtimer);
+        int left = (int) (round_length - (time(NULL) - start_round));
+        mvwprintw(wtimer, 0, 0, "Secs: %3d", left);
+        wrefresh(wtimer);
 
-    if (left <= 0 || ch == 4) // ran out of time or CTRL-D
-      return true;
+        if (left <= 0 || ch == 4) // ran out of time or CTRL-D
+            return true;
 
-    if (ch == ERR)
-      // ran out of time so timer updated; keep going
-      continue;
+        if (ch == ERR)
+            // ran out of time so timer updated; keep going
+            continue;
 
-    if (ch == '\n') {
-      // finished word, mark as done and return
-      word[wl] = '\0';
-      return false;
+        if (ch == '\n') {
+            // finished word, mark as done and return
+            word[wl] = '\0';
+            return false;
+        }
+
+        if (ch == KEY_BACKSPACE || ch == KEY_LEFT || ch == 127) {
+            if (wl > 0)
+                word[--wl] = '\0';
+        }
+
+        // Next two are lightweight-history; can up/down arrow
+        // to move from this word to prev
+        if (ch == KEY_UP && prev[0] != '\0') {
+            strcpy(word, prev);
+            prev[0] = '\0';
+            wl = (int) strlen(word);
+        }
+
+        if (ch == KEY_DOWN && prev[0] == '\0') {
+            strcpy(prev, word);
+            word[0] = '\0';
+            wl = 0;
+        }
+
+        if (wl < 16) {
+            if (ch >= 'A' && ch <= 'Z')
+                ch = tolower(ch);
+
+            if (ch >= 'a' && ch <= 'z')
+                word[wl++] = (char) ch;
+        }
+
+        word[wl] = '\0';
     }
-
-    if (ch == KEY_BACKSPACE || ch == KEY_LEFT || ch == 127) {
-      if (wl > 0)
-        word[--wl] = '\0';
-    }
-
-    // Next two are lightweight-history; can up/down arrow
-    // to move from this word to prev
-    if (ch == KEY_UP && prev[0] != '\0') {
-      strcpy(word, prev);
-      prev[0] = '\0';
-      wl = strlen(word);
-    }
-
-    if (ch == KEY_DOWN && prev[0] == '\0') {
-      strcpy(prev, word);
-      word[0] = '\0';
-      wl = 0;
-    }
-
-    if (wl < 16) {
-      if (ch >= 'A' && ch <= 'Z')
-        ch = tolower(ch);
-
-      if (ch >= 'a' && ch <= 'z')
-        word[wl++] = (char)ch;
-    }
-
-    word[wl] = '\0';
-  }
 }
 
 /** Play a round of user input. */
 
 static void player_round() {
-  player_nwords = 0;
-  player_score = 0;
+    player_nwords = 0;
+    player_score = 0;
 
-  werase(wprompt);
-  box(wprompt, 0, 0);
-  mvwprintw(wprompt, 1, 2, "> ");
-  char word[17];
-  char prev[17];
-  prev[0] = '\0';
+    werase(wprompt);
+    box(wprompt, 0, 0);
+    mvwprintw(wprompt, 1, 2, "> ");
+    char word[17];
+    char prev[17];
+    prev[0] = '\0';
 
-  time_t start_round = time(NULL);
-  halfdelay(1);
+    time_t start_round = time(NULL);
+    halfdelay(1);
 
-  while (true) {
-    word[0] = '\0';
-    if (get_word(word, prev, start_round))
-      // ran out of time, so round is over
-      break;
+    while (true) {
+        word[0] = '\0';
+        if (get_word(word, prev, start_round))
+            // ran out of time, so round is over
+            break;
 
-    (void)guess_word(word);
-    mvprintw(10, 1, "Correctly Guessed Words: %d, Score: %d", player_nwords,
-        player_score);
-    refresh();
-    print_words(true, false);
-    strcpy(prev, word);
-  }
+        (void) guess_word(word);
+        mvprintw(10, 1, "Correctly Guessed Words: %d, Score: %d", player_nwords,
+                 player_score);
+        refresh();
+        print_words(true, false);
+        strcpy(prev, word);
+    }
 
-  cbreak();
+    cbreak();
 }
 
 /** Play a single board. */
 
 static void play_board() {
-  make_board();
-  board_nwords = 0;
-  board_score = 0;
+    make_board();
+    board_nwords = 0;
+    board_score = 0;
 
-  find_all_words();
+    find_all_words();
 
-  werase(wboard);
-  box(wboard, 0, 0);
-  wrefresh(wboard);
+    werase(wboard);
+    box(wboard, 0, 0);
+    wrefresh(wboard);
 
-  refresh();
-  print_words(false, false);
-  prompt("Press any key to start. ");
+    refresh();
+    print_words(false, false);
+    prompt("Press any key to start. ");
 
-  display_board();
-  wrefresh(wboard);
-  mvprintw(3, 19, "Board words: %d, score: %d", board_nwords, board_score);
-  clrtoeol();
-  refresh();
-
-  player_round();
-
-  if (prompt_yn("Do you want to see missed words? ")) {
-    mvprintw(10, 1, "Missed Words:");
+    display_board();
+    wrefresh(wboard);
+    mvprintw(3, 19, "Board words: %d, score: %d", board_nwords, board_score);
     clrtoeol();
     refresh();
-    print_words(false, true);
-  }
 
-  free_words();
+    player_round();
+
+    if (prompt_yn("Do you want to see missed words? ")) {
+        mvprintw(10, 1, "Missed Words:");
+        clrtoeol();
+        refresh();
+        print_words(false, true);
+    }
+
+    free_words();
 }
 
 /** Main program. */
 
 int main(int argc, char *argv[]) {
 
-  if (argc > 1)
-    round_length = atoi(argv[1]);
-  else
-    round_length = 300;
+    if (argc > 1)
+        round_length = atoi(argv[1]); // NOLINT(cert-err34-c)
+    else
+        round_length = 300;
 
-  // determine if this is being run locally -- if so, we look
-  // for the dictionary here
+    // determine if this is being run locally -- if so, we look
+    // for the dictionary here
 
-  bool local = strcmp(argv[0], basename(argv[0])) != 0;
-  read_all(local);
+    bool local = strcmp(argv[0], basename(argv[0])) != 0;
+    read_all(local);
 
-  initscr();
-  signal(SIGINT, finish);
-  cbreak();
-  noecho();
+    initscr();
+    signal(SIGINT, finish);
+    cbreak();
+    noecho();
 
-  getmaxyx(stdscr, winrow, wincol);
+    getmaxyx(stdscr, winrow, wincol);
 
-  mvprintw(1, 19, "LOVELY LEVERET LEXIGAME v1.1");
-  refresh();
+    mvprintw(1, 19, "LOVELY LEVERET LEXIGAME v1.1");
+    refresh();
 
-  wtimer = newwin(1, 10, 3, 52);
-  wboard = newwin(9, 17, 0, 0);
-  wprompt = newwin(3, wincol - 19, 6, 19);
-  keypad(wprompt, TRUE);
+    wtimer = newwin(1, 10, 3, 52);
+    wboard = newwin(9, 17, 0, 0);
+    wprompt = newwin(3, wincol - 19, 6, 19);
+    keypad(wprompt, TRUE);
 
-  wwords_row = winrow - 11;
-  wwords_col = wincol;
+    wwords_row = winrow - 11;
+    wwords_col = wincol;
 
-  wwords = newwin(wwords_row, wwords_col, 11, 0);
+    wwords = newwin(wwords_row, wwords_col, 11, 0);
 
-  do
-    play_board();
-  while (prompt_yn("Play again? "));
+    do
+        play_board();
+    while (prompt_yn("Play again? "));
 
-  finish(0);
+    finish(0);
 }
