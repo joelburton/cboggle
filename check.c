@@ -31,7 +31,7 @@ static int boardwords_cmp(const void *a,
 
 /** Add word to tree of legal words. Returns T/F if it is new. */
 
-static bool add_word(const char word[]) {
+static bool add_word(const char word[], int length) {
     BoardWord *new_word = malloc(sizeof(BoardWord));
     new_word->word = word;
     new_word->found = false;
@@ -42,7 +42,6 @@ static bool add_word(const char word[]) {
         new_word->word = strdup(word);   // now we know we'll keep it, so strdup it
         board_nwords++;
         board_score += WORD_SCORES[strlen(word)];
-        int length = strlen(word);
         if (length > board_longest)
             board_longest = length;
         return true;
@@ -107,7 +106,7 @@ static void find_words(
     // Add this word to the found-words.
     if (DAWG_EOW(dawg, i)) {
         word[word_len] = '\0';
-        add_word(word);
+        add_word(word, word_len);
     }
 
     // Check every direction H/V/D from here (will also re-check this tile, but

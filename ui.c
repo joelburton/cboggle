@@ -246,7 +246,7 @@ static void play_board() {
 
     display_board();
     wrefresh(wboard);
-    mvprintw(3, 19, "Board words: %d (%d), score: %d",
+    mvprintw(3, 19, "Words: %d (longest: %d), score: %d",
         board_nwords, board_longest, board_score);
     clrtoeol();
     refresh();
@@ -289,7 +289,7 @@ int main(int argc, char *argv[]) {
     mvprintw(1, 19, "LOVELY LEVERET LEXIGAME v1.2");
     refresh();
 
-    wtimer = newwin(1, 10, 3, 52);
+    wtimer = newwin(1, 10, 3, 58);
     wboard = newwin(9, 17, 0, 0);
     wprompt = newwin(3, wincol - 19, 6, 19);
     keypad(wprompt, TRUE);
