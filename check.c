@@ -150,24 +150,20 @@ void free_words() {
 
 /** Check player guess.
  *
- * @return 0 (not a word), -1 (already guessed), or 1 (good)
+ * @return GUESS_BAD, GUESS_DUP, or GUESS_GOOD
  */
 
-int guess_word(char word[]) {
-    BoardWord *bw = alloca(sizeof(BoardWord));
-    bw->word = word;
-    BoardWord **found = tfind(bw, (void **) &legal, boardwords_cmp);
+int guess_word(char *word) {
+    BoardWord bw = {.word = word};
+    BoardWord **found = tfind(&bw, (void **) &legal, boardwords_cmp);
 
-    if (found == NULL) return 0;
+    if (found == NULL) return GUESS_BAD;
 
     // "found" is pointer to tree node (which is pointer to BoardWord);
-    // make it now a pointer to the BoardWord itself
-    //found = * (BoardWord **) found;
-
-    if ((*found)->found) return -1;
+    if ((*found)->found) return GUESS_DUP;
 
     (*found)->found = true;
     player_nwords++;
     player_score += WORD_SCORES[strlen(word)];
-    return 1;
+    return GUESS_GOOD;
 }

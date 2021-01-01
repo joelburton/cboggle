@@ -216,6 +216,7 @@ static void player_round() {
             // ran out of time, so round is over
             break;
 
+        // guess_word returns a status, but we don't need to care
         (void) guess_word(word);
         mvprintw(10, 1, "Correctly Guessed Words: %d, Score: %d", player_nwords,
                  player_score);
