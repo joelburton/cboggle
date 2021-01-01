@@ -42,6 +42,9 @@ static bool add_word(const char word[]) {
         new_word->word = strdup(word);   // now we know we'll keep it, so strdup it
         board_nwords++;
         board_score += WORD_SCORES[strlen(word)];
+        int length = strlen(word);
+        if (length > board_longest)
+            board_longest = length;
         return true;
     } else {
         free(new_word);

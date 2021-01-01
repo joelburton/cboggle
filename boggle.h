@@ -25,6 +25,7 @@ typedef struct BoardWord_s {
 
 extern BoardWord *legal;
 extern int board_nwords;
+extern int board_longest;
 extern int board_score;
 extern int player_nwords;
 extern int player_score;

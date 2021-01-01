@@ -9,6 +9,7 @@
 BoardWord *legal;
 int board_score;
 int board_nwords;
+int board_longest;
 int player_nwords;
 int player_score;
 int round_length;
@@ -245,7 +246,8 @@ static void play_board() {
 
     display_board();
     wrefresh(wboard);
-    mvprintw(3, 19, "Board words: %d, score: %d", board_nwords, board_score);
+    mvprintw(3, 19, "Board words: %d (%d), score: %d",
+        board_nwords, board_longest, board_score);
     clrtoeol();
     refresh();
 

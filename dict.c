@@ -1,4 +1,3 @@
-#include <stdlib.h>
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -19,7 +18,6 @@ void read_all(bool local) {
     const int fd = open(path, O_RDONLY);
     if (fd < 0)
         FATAL2("Cannot open dict at", path);
-    // fatal("Cannot open " WORDS_PATH);
 
     int32_t nelems;
     if (read(fd, &nelems, 4) < 4)
