@@ -87,7 +87,7 @@ static void find_words(
         return;
 
     // Find the DAWG-node for existing-DAWG-node plus this letter.
-    char sought = toupper(board[y][x]); // NOLINT(cppcoreguidelines-narrowing-conversions)
+    char sought = (char) toupper(board[y][x]);
 
     while (i != 0 && DAWG_LETTER(dawg, i) != sought)
         i = DAWG_NEXT(dawg, i);
@@ -101,7 +101,7 @@ static void find_words(
 
     // Either this is a word, or the stem of a word. So update our 'word' to
     // include this letter.
-    word[word_len++] = tolower(board[y][x]); // NOLINT(cppcoreguidelines-narrowing-conversions)
+    word[word_len++] = (char) tolower(board[y][x]);
 
     // Add this word to the found-words.
     if (DAWG_EOW(dawg, i)) {
