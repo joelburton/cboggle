@@ -1,6 +1,6 @@
 INCLUDES = $(shell pkg-config --cflags ncurses)
-CFLAGS = -Wall -Wextra -O0 -g3 $(INCLUDES)
-LDLIBS = $(shell pkg-config --libs ncurses)
+CFLAGS = -Wall -pedantic -Wextra -O0 -g3 $(INCLUDES) 
+LDLIBS = $(shell pkg-config --libs ncurses) 
 OBJS = ui.o check.o board.o dict.o utils.o
 
 boggle-linux boggle-osx: CFLAGS = -Os -g0 $(INCLUDES)
@@ -19,12 +19,11 @@ boggle: $(OBJS)
 
 debug: clean $(OBJS)
 	$(CC) $(OBJS) -o $@ $(LDLIBS)
-	rm -f *.o
+	rm -f $(OBJS)
 
 install: boggle
-	sudo cp boggle /usr/local/bin
-	sudo mkdir -p /usr/local/share/boggle
-	sudo cp words.dat /usr/local/share/boggle
+	install -s boggle /usr/local/bin
+	install -D words.dat /usr/local/share/boggle
 
 # Package up as a static file for OSX
 boggle-osx: clean $(OBJS)

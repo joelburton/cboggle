@@ -1,8 +1,4 @@
-/cmake-build*
+tags
 *.o
-/.idea
-checkword
-ui
-/boggle-static
-/boggle.zip
-/boggle
+boggle
+.idea/
