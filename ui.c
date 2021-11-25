@@ -27,7 +27,7 @@ WINDOW *wtimer;
 static int prompt_yn(const char *msg) {
     werase(wprompt);
     box(wprompt, 0, 0);
-    mvwprintw(wprompt, 1, 2, msg);
+    mvwprintw(wprompt, 1, 2, "%s", msg);
     echo();
     while (true) {
         char buffer[4], answer[4];
@@ -51,7 +51,7 @@ static int prompt_yn(const char *msg) {
 static int prompt(const char *msg) {
     werase(wprompt);
     box(wprompt, 0, 0);
-    mvwprintw(wprompt, 1, 2, msg);
+    mvwprintw(wprompt, 1, 2, "%s", msg);
     return wgetch(wprompt);
 }
 
@@ -182,12 +182,9 @@ static bool get_word(char *word, char *prev, time_t start_round) {
             wl = 0;
         }
 
-        if (wl < 16) {
-            if (ch >= 'A' && ch <= 'Z')
-                ch = tolower(ch);
-
-            if (ch >= 'a' && ch <= 'z')
-                word[wl++] = (char) ch;
+        if (wl < 16 && isalpha(ch)) {
+	    ch = tolower(ch);
+            word[wl++] = (char) ch;
         }
 
         word[wl] = '\0';
@@ -255,7 +252,7 @@ static void play_board() {
     player_round();
 
     if (prompt_yn("Do you want to see missed words? ")) {
-        mvprintw(10, 1, "Missed Words:");
+        mvprintw(10, 1, "%s", "Missed Words:");
         clrtoeol();
         refresh();
         print_words(false, true);
@@ -268,10 +265,7 @@ static void play_board() {
 
 int main(int argc, char *argv[]) {
 
-    if (argc > 1)
-        round_length = atoi(argv[1]); // NOLINT(cert-err34-c)
-    else
-        round_length = 300;
+    round_length = (argc > 1) ? atoi(argv[1]) : 300;
 
     // determine if this is being run locally -- if so, we look
     // for the dictionary here
@@ -287,7 +281,7 @@ int main(int argc, char *argv[]) {
 
     getmaxyx(stdscr, winrow, wincol);
 
-    mvprintw(1, 19, "LOVELY LEVERET LEXIGAME v1.2");
+    mvprintw(1, 19, "%s", "LOVELY LEVERET LEXIGAME v1.2");
     refresh();
 
     wtimer = newwin(1, 10, 3, 58);

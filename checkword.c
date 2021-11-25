@@ -6,7 +6,7 @@ int main() {
     clock_t start;
 
     start = clock();
-    read_all();
+    read_all(false);
     printf("read sec = %f\n", (clock() - start) / (double) CLOCKS_PER_SEC);
 
     start = clock();

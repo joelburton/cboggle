@@ -10,7 +10,6 @@ set(SOURCE_FILES
         board.c
         boggle.h
         check.c
-        checkword.c
         ui.c
         dict.c
         )

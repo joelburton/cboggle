@@ -25,7 +25,7 @@ int check_word(const int32_t *restrict dawg, const char *word) {
         if (DAWG_LETTER(dawg, i) == *word)
             // got matching letter -- are we at the end of sought word?
             if (*++word == '\0')
-                // yes, so end of search -- if this is a valid word-end, we win!
+                // yes, so end of search -- if this is valid word-end, win!
                 return DAWG_EOW(dawg, i);
 
             else
@@ -36,7 +36,7 @@ int check_word(const int32_t *restrict dawg, const char *word) {
             // not the right word, so scan to next sibling
             i = DAWG_NEXT(dawg, i);
 
-        // either the next sibling or the next child could be no-such-letter, lose
+        // either next sibling or next child could be no-such-letter, lose
         if (!i)
             return -1;
     }
@@ -66,9 +66,10 @@ int main() {
 
     printf("%f\n\n", (clock() - start) / (double) CLOCKS_PER_SEC);
 
-    char *words[] =
-            {"AA", "AD", "AC", "APPLE", "APPLES", "APPPLES", "APPL", "APPLESAUCES",
-             "BANANA"};
+    char *words[] = {
+             "AA", "AD", "AC", "APPLE", "APPLES", "APPPLES", "APPL", 
+	     "APPLESAUCES", "BANANA"
+    };
     for (int i = 0; i < sizeof(words) / sizeof(char *); i++) {
         start = clock();
         printf("%s = %d\n", words[i], check_word(dawg, words[i]));

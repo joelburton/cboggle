@@ -1,7 +1,7 @@
-#include "boggle.h"
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "boggle.h"
 
 /** DAWG handling. */
 
@@ -39,7 +39,7 @@ static bool add_word(const char word[], int length) {
     BoardWord **newNode = tsearch(new_word, (void **) &legal, boardwords_cmp);
     if (new_word == *newNode) {
         // newNode is a new word
-        new_word->word = strdup(word);   // now we know we'll keep it, so strdup it
+        new_word->word = strdup(word);   // know we'll keep it, so strdup it
         board_nwords++;
         board_score += WORD_SCORES[strlen(word)];
         if (length > board_longest)
