@@ -13,16 +13,16 @@
 // should work.
 #define HEIGHT 4
 #define WIDTH 4
-#define WORDS_PATH "/usr/local/share/boggle/words.dat"
+#define WORDS_PATH "/Users/joel/src/cboggle/words.dat"
 #define WORDS_LOCAL_PATH "words.dat"
 #define FATAL2(m, m2) \
   err(1, "%s:%i: %s: %s %s", __FILE__, __LINE__, __func__, m, m2)
 
 #define GUESS_GOOD 1
 #define GUESS_BAD 0
-#define GUESS_DUP -1
+#define GUESS_DUP (-1)
 
-typedef struct BoardWord_s {
+typedef struct {
     const char *word;
     bool found;
 } BoardWord;

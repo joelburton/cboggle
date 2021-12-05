@@ -1,6 +1,4 @@
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 
 #define BYTE_WIDTH 8
 #define INT_WIDTH 32

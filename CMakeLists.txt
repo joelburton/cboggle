@@ -1,18 +1,16 @@
 cmake_minimum_required(VERSION 3.7)
 project(boggle)
 
-set(CMAKE_C_STANDARD 11)
-include(FindPkgConfig)
-pkg_check_modules(CURSES ncurses REQUIRED)
-include_directories(${CURSES_INCLUDE_DIRS})
+find_library(ncurses CURSES)
 
-set(SOURCE_FILES
-        board.c
-        boggle.h
-        check.c
-        ui.c
-        dict.c
-        )
+add_executable(boggle board.c check.c ui.c dict.c)
+target_link_libraries(boggle ${CURSES_LIBRARIES})
 
-add_executable(boggle ${SOURCE_FILES})
-target_link_libraries(${PROJECT_NAME} ${CURSES_LIBRARIES})
+add_executable(checker checker.c dict.c)
+
+set(WORDS "${CMAKE_SOURCE_DIR}/words.dat")
+add_custom_command(
+        TARGET boggle POST_BUILD
+        TARGET checker POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy ${WORDS} ${CMAKE_BINARY_DIR}
+)

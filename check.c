@@ -2,18 +2,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "boggle.h"
-
-/** DAWG handling. */
-
-#define CHILD_BIT_SHIFT 10
-#define EOW_BIT_MASK 0X00000200
-#define EOL_BIT_MASK 0X00000100
-#define LTR_BIT_MASK 0X000000FF
-
-#define DAWG_LETTER(arr, i) (arr[i] & LTR_BIT_MASK)
-#define DAWG_EOW(arr, i)    (arr[i] & EOW_BIT_MASK)
-#define DAWG_NEXT(arr, i)  ((arr[i] & EOL_BIT_MASK) ? 0 : i + 1)
-#define DAWG_CHILD(arr, i)  (arr[i] >> CHILD_BIT_SHIFT)
+#include "check.h"
 
 /** Scoring */
 
@@ -42,8 +31,7 @@ static bool add_word(const char word[], int length) {
         new_word->word = strdup(word);   // know we'll keep it, so strdup it
         board_nwords++;
         board_score += WORD_SCORES[strlen(word)];
-        if (length > board_longest)
-            board_longest = length;
+        if (length > board_longest) board_longest = length;
         return true;
     } else {
         free(new_word);
@@ -76,27 +64,23 @@ static void find_words(
         unsigned int i, char *word, int word_len, int y, int x, int_least64_t used) {
 
     // If not a legal tile, can't make word here
-    if (y < 0 || y >= HEIGHT || x < 0 || x >= WIDTH)
-        return;
+    if (y < 0 || y >= HEIGHT || x < 0 || x >= WIDTH) return;
 
     // Make bitmask for this tile position
     int_least64_t mask = 0x1 << (y * WIDTH + x);
 
     // If we've already used this tile, can't make word here
-    if (used & mask)
-        return;
+    if (used & mask) return;
 
     // Find the DAWG-node for existing-DAWG-node plus this letter.
     char sought = (char) toupper(board[y][x]);
 
-    while (i != 0 && DAWG_LETTER(dawg, i) != sought)
-        i = DAWG_NEXT(dawg, i);
+    while (i != 0 && DAWG_LETTER(dawg, i) != sought) i = DAWG_NEXT(dawg, i);
 
-    if (i == 0)
-        // There are no words continuing with this letter
-        return;
+    // There are no words continuing with this letter
+    if (i == 0) return;
 
-    // Mark tile as used
+    // Mark this tile as used
     used |= mask;
 
     // Either this is a word, or the stem of a word. So update our 'word' to

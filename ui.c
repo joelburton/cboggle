@@ -265,7 +265,7 @@ static void play_board() {
 
 int main(int argc, char *argv[]) {
 
-    round_length = (argc > 1) ? atoi(argv[1]) : 300;
+    round_length = (argc > 1) ? (int) strtol(argv[1], NULL, 10) : 300;
 
     // determine if this is being run locally -- if so, we look
     // for the dictionary here

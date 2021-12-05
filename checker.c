@@ -4,41 +4,29 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
-#include <time.h>
-
-#define CHILD_BIT_SHIFT 10
-#define EOW_BIT_MASK 0X00000200
-#define EOL_BIT_MASK 0X00000100
-#define LTR_BIT_MASK 0X000000FF
-
-#define DAWG_LETTER(arr, i) (arr[i] & LTR_BIT_MASK)
-#define DAWG_EOW(arr, i)    (arr[i] & EOW_BIT_MASK)
-#define DAWG_NEXT(arr, i)  ((arr[i] & EOL_BIT_MASK) ? 0 : i + 1)
-#define DAWG_CHILD(arr, i)  (arr[i] >> CHILD_BIT_SHIFT)
-
+#include <ctype.h>
+#include <string.h>
+#include "check.h"
 
 int check_word(const int32_t *restrict dawg, const char *word) {
     int_fast32_t i = 1;
 
     while (true) {
-
-        if (DAWG_LETTER(dawg, i) == *word)
+        if (DAWG_LETTER(dawg, i) == *word) {
             // got matching letter -- are we at the end of sought word?
-            if (*++word == '\0')
+            if (*++word == '\0') {
                 // yes, so end of search -- if this is valid word-end, win!
                 return DAWG_EOW(dawg, i);
-
-            else
+            } else {
                 // not at end of word, so proceed to next letter
                 i = DAWG_CHILD(dawg, i);
-
-        else
+            }
+        } else {
             // not the right word, so scan to next sibling
             i = DAWG_NEXT(dawg, i);
-
+        }
         // either next sibling or next child could be no-such-letter, lose
-        if (!i)
-            return -1;
+        if (!i) return -1;
     }
 }
 
@@ -47,33 +35,26 @@ _Noreturn void fatal(char *func) {
     exit(EXIT_FAILURE);
 }
 
-int main() {
-    clock_t start = clock();
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        fprintf(stderr, "No words provided");
+        exit(1);
+    }
 
     const int fd = open("words.dat", O_RDONLY);
-    if (fd < 0)
-        fatal("Cannot open " "words.dat");
+    if (fd < 0) fatal("Cannot open " "words.dat");
 
     int32_t nelems;
-    if (read(fd, &nelems, 4) < 4)
-        fatal("Cannot get file size");
+    if (read(fd, &nelems, 4) < 4) fatal("Cannot get file size");
 
     int32_t *f = mmap(NULL, (size_t) nelems * 4, PROT_READ, MAP_PRIVATE, fd, 0);
-    if (f == MAP_FAILED)
-        fatal("Cannot read dictionary");
+    if (f == MAP_FAILED) fatal("Cannot read dictionary");
 
     const int32_t *restrict dawg = f + 1;
 
-    printf("%f\n\n", (clock() - start) / (double) CLOCKS_PER_SEC);
-
-    char *words[] = {
-             "AA", "AD", "AC", "APPLE", "APPLES", "APPPLES", "APPL", 
-	     "APPLESAUCES", "BANANA"
-    };
-    for (int i = 0; i < sizeof(words) / sizeof(char *); i++) {
-        start = clock();
-        printf("%s = %d\n", words[i], check_word(dawg, words[i]));
-        printf("%f\n\n", (clock() - start) / (double) CLOCKS_PER_SEC);
+    for (int i = 1; i < argc; i++) {
+        char *w = argv[i];
+        for (int j = 0; w[j]; j++) w[j] = (char) toupper(w[j]);
+        printf("%s = %d\n", w, check_word(dawg,  w));
     }
-
 }
