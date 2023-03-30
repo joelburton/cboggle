@@ -9,7 +9,7 @@
 #include "check.h"
 
 int check_word(const int32_t *restrict dawg, const char *word) {
-    int_fast32_t i = 1;
+    int32_t i = 1;
 
     while (true) {
         if (DAWG_LETTER(dawg, i) == *word) {

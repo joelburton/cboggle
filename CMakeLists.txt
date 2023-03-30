@@ -1,7 +1,8 @@
-cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.22)
 project(boggle)
 
-find_library(ncurses CURSES)
+find_package(Curses)
+include_directories(${CURSES_INCLUDE_DIR})
 
 add_executable(boggle board.c check.c ui.c dict.c)
 target_link_libraries(boggle ${CURSES_LIBRARIES})
