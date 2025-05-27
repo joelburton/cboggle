@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <string.h>
+#include "board.h"
 #include "check.h"
 
 int check_word(const int32_t *restrict dawg, const char *word) {

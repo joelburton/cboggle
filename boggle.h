@@ -1,9 +1,7 @@
 /** cboggle: a straightforward boggle game using ncurses and a DAWG. */
 
-#include <stdbool.h>
-#include <ncurses.h>
+#include <stdint.h>
 #include <err.h>
-#include <search.h>
 
 #ifndef BOGGLE_H
 #define BOGGLE_H
@@ -13,14 +11,8 @@
 // should work.
 #define HEIGHT 4
 #define WIDTH 4
-#define WORDS_PATH "/Users/joel/src/cboggle/words.dat"
-#define WORDS_LOCAL_PATH "words.dat"
 #define FATAL2(m, m2) \
   err(1, "%s:%i: %s: %s %s", __FILE__, __LINE__, __func__, m, m2)
-
-#define GUESS_GOOD 1
-#define GUESS_BAD 0
-#define GUESS_DUP (-1)
 
 typedef struct {
     const char *word;
@@ -33,31 +25,5 @@ extern int board_longest;
 extern int board_score;
 extern int player_nwords;
 extern int player_score;
-
-// board.c
-
-extern char board[HEIGHT][WIDTH];
-
-void make_board();
-
-// check.c
-
-void find_all_words();
-
-void free_words();
-
-int guess_word(char word[]);
-
-// dict.c
-
-void read_all(bool local);
-
-extern const int32_t *dawg;
-
-// ui.c
-
-extern int round_length;
-
-// util.c
 
 #endif /* end of boggle_h */

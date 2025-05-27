@@ -1,10 +1,14 @@
 #include "boggle.h"
+#include "board.h"
+#include "check.h"
+#include <curses.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <libgen.h>
 #include <time.h>
 #include <signal.h>
+#include <search.h>
 
 BoardWord *legal;
 int board_score;
@@ -271,7 +275,7 @@ int main(int argc, char *argv[]) {
     // for the dictionary here
 
     bool local = strcmp(argv[0], basename(argv[0])) != 0;
-    read_all(local);
+    read_dawg(local);
 
     initscr();
     signal(SIGINT, finish);

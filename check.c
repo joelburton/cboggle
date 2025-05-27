@@ -1,8 +1,18 @@
+#include <search.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "board.h"
 #include "boggle.h"
+#include "dict.h"
 #include "check.h"
+
+
+const int32_t *dawg;
+
+void read_dawg(bool local) {
+    dawg = read_all(local);
+}
 
 /** Scoring */
 

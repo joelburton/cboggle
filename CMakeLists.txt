@@ -9,6 +9,8 @@ target_link_libraries(boggle ${CURSES_LIBRARIES})
 
 add_executable(checker checker.c dict.c)
 
+set_property(TARGET boggle checker PROPERTY C_STANDARD 23)
+
 set(WORDS "${CMAKE_SOURCE_DIR}/words.dat")
 add_custom_command(
         TARGET boggle POST_BUILD

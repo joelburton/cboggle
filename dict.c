@@ -2,8 +2,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "boggle.h"
+#include "dict.h"
 
-const int32_t *dawg;
 
 /** Read dictionary file.
  *
@@ -12,7 +12,7 @@ const int32_t *dawg;
  * @param local: is this locally-run or globally?
  */
 
-void read_all(bool local) {
+int32_t * read_all(bool local) {
     const char *path = local ? WORDS_LOCAL_PATH : WORDS_PATH;
     const int fd = open(path, O_RDONLY);
     if (fd < 0) FATAL2("Cannot open dict at", path);
@@ -24,5 +24,5 @@ void read_all(bool local) {
     if (f == MAP_FAILED) FATAL2("Cannot read dict at", path);
 
     // Skip over the first integer, which was the # of dawg items
-    dawg = f + 1;
+    return f + 1;
 }
